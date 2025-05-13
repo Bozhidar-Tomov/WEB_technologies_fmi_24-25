@@ -59,14 +59,25 @@
             обработката на други ресурси, като HTML и CSS, което може да забави зареждането на
             страницата. Ще разгледаме начини за оценка на JavaScript кода, неговото влияние върху
             зареждането на уеб страницата и как можем да го оптимизираме. Ще разгледаме инструменти
-            за мониторинг на производителността, като Google Lighthouse, който може да помогне за
-            идентифициране на проблеми и предлагане на решения за подобряване на ефективността на
-            уеб страниците.
+            за мониторинг на производителността и решения за подобряване на ефективността на уеб
+            страниците.
           </p>
           <figure>
             <img src="images/img1.webp" alt="Диаграма на производителността на JavaScript" />
             <figcaption>
-              Илюстрация на влиянието на JavaScript върху времето за зареждане на страницата.
+              Фигура 1: Илюстрация на влиянието на JavaScript върху времето за зареждане на
+              страницата<a
+                href="https://medium.com/reloading/javascript-start-up-performance-69200f43b201"
+                ><a href="https://medium.com/reloading/javascript-start-up-performance-69200f43b201"
+                  ><a
+                    href="https://medium.com/reloading/javascript-start-up-performance-69200f43b201"
+                    ><a
+                      href="https://medium.com/reloading/javascript-start-up-performance-69200f43b201"
+                      >[2]</a
+                    ></a
+                  ></a
+                ></a
+              >.
             </figcaption>
           </figure>
         </article>
@@ -91,9 +102,9 @@
               обработка, което забавя момента, в който страницата става интерактивна.
             </p>
             <p>
-              Ако един скрипт се изпълнява повече от 50 ms, това забавя цялостното време до
+              "Ако един скрипт се изпълнява повече от 50 ms, това забавя цялостното време до
               интерактивност с цялата продължителност на изтегляне, парсване и изпълнение на
-              скрипта.
+              скрипта" - казва <i>Alex Russell</i>
             </p>
           </div>
 
@@ -115,7 +126,7 @@
           <div class="js-devices">
             <h3>Разлики между устройства</h3>
             <p>
-              На мобилни устройства — особено по-евтини или по-стари модели — времето за парсване и
+              На мобилни устройства - особено по-евтини или по-стари модели - времето за парсване и
               компилиране може да бъде 2 до 5 пъти по-дълго, отколкото на настолни компютри.
             </p>
             <p>
@@ -133,7 +144,18 @@
               alt="Времена за парсване и компилиране на JavaScript на различни устройства."
             />
             <figcaption>
-              Времена за парсване и компилиране на JavaScript на различни устройства.
+              Фигура 2: Времена за парсване и компилиране на JavaScript на различни устройства.<a
+                href="https://medium.com/reloading/javascript-start-up-performance-69200f43b201"
+                ><a href="https://medium.com/reloading/javascript-start-up-performance-69200f43b201"
+                  ><a
+                    href="https://medium.com/reloading/javascript-start-up-performance-69200f43b201"
+                    ><a
+                      href="https://medium.com/reloading/javascript-start-up-performance-69200f43b201"
+                      >[2]</a
+                    ></a
+                  ></a
+                ></a
+              >
             </figcaption>
           </figure>
         </article>
@@ -149,8 +171,9 @@
         <div class="tool chrome-devtools">
           <h3>Chrome DevTools</h3>
           <p>
-            В <strong>Performance</strong> панела на <strong>Google DevTools</strong> можем да
-            измерим времето, изразходвано за парсване и компилиране:
+            <strong>Chrome DevTools</strong> предоставя различни инструменти за анализ на
+            производителността на JavaScript. В <strong>Performance</strong> панела можем да измерим
+            времето, изразходвано за парсване и компилиране на JavaScript код, чрез:
           </p>
           <ul>
             <li>
@@ -158,14 +181,28 @@
               V8 прекарва в <code>Parse</code> и <code>Compile</code>.
             </li>
             <li>
-              В <strong>Chrome Canary</strong> може да се активира
-              <em>V8 Runtime Call Stats</em> чрез
+              <strong>Chrome Canary</strong> - експериментална версия на Google Chrome,
+              предназначена за разработчици и тестване на нови функции, преди те да бъдат внедрени в
+              стандартната версия. От там може да се активира <em>V8 Runtime Call Stats</em> чрез
               <em>Experiments > V8 Runtime Call Stats on Timeline</em>.
             </li>
           </ul>
           <figure>
             <img src="images/img3.webp" alt="Изглед от chrome-devtools" />
-            <figcaption>Изглед от chrome-devtools</figcaption>
+            <figcaption>
+              Фигура 3: Изглед от chrome-devtools.
+              <a href="https://medium.com/reloading/javascript-start-up-performance-69200f43b201"
+                ><a href="https://medium.com/reloading/javascript-start-up-performance-69200f43b201"
+                  ><a
+                    href="https://medium.com/reloading/javascript-start-up-performance-69200f43b201"
+                    ><a
+                      href="https://medium.com/reloading/javascript-start-up-performance-69200f43b201"
+                      >[2]</a
+                    ></a
+                  ></a
+                ></a
+              >
+            </figcaption>
           </figure>
         </div>
 
@@ -179,18 +216,38 @@
             скоростта на приложенията.
           </p>
           <figure>
-            <img src="images/img4.webp" alt="Изглед от chrome-tracing" />
-            <figcaption>Изглед от chrome-tracing</figcaption>
+            <img src="images/img4.1.webp" alt="Изглед от chrome-tracing" />
+            <figcaption>
+              Фигура 4.1: Изглед от chrome-tracing.<a
+                href="https://medium.com/reloading/javascript-start-up-performance-69200f43b201"
+                ><a href="https://medium.com/reloading/javascript-start-up-performance-69200f43b201"
+                  ><a
+                    href="https://medium.com/reloading/javascript-start-up-performance-69200f43b201"
+                    ><a
+                      href="https://medium.com/reloading/javascript-start-up-performance-69200f43b201"
+                      >[2]</a
+                    ></a
+                  ></a
+                ></a
+              >
+            </figcaption>
+          </figure>
+          <figure>
+            <img src="images/img4.2.png" alt="Изглед от chrome-tracing" />
+            <figcaption>
+              Фигура 4.2: Времева линия на събитията
+              https://www.chromium.org/developers/how-tos/trace-event-profiling-tool/
+            </figcaption>
           </figure>
         </div>
 
         <div class="tool wpt">
           <h3>WebPageTest</h3>
           <p>
-            Измерва колко бързо се зареждат странците и идентифицира факторите, влияещи на
-            скоростта. Предоставя подробни отчети с метрики като време за зареждане, време до първи
-            байт и визуална прогресия, като може да симулира различни браузъри, устройства и мрежови
-            условия.
+            Онлийн инструмент, които измерва колко бързо се зареждат странците и идентифицира
+            факторите, влияещи на скоростта. Предоставя подробни отчети с метрики като време за
+            зареждане, време до първи байт и визуална прогресия, като може да симулира различни
+            браузъри, устройства и мрежови условия.
           </p>
           <p>
             <strong>WebPageTest</strong> предоставя подробна информация при активирана опция
@@ -217,7 +274,20 @@
           </ul>
           <figure>
             <img src="images/img5.webp" alt="Изглед от WebPageTest" />
-            <figcaption>Изглед от WebPageTest</figcaption>
+            <figcaption>
+              Фигура 5: Изглед от WebPageTest.<a
+                href="https://medium.com/reloading/javascript-start-up-performance-69200f43b201"
+                ><a href="https://medium.com/reloading/javascript-start-up-performance-69200f43b201"
+                  ><a
+                    href="https://medium.com/reloading/javascript-start-up-performance-69200f43b201"
+                    ><a
+                      href="https://medium.com/reloading/javascript-start-up-performance-69200f43b201"
+                      >[2]</a
+                    ></a
+                  ></a
+                ></a
+              >
+            </figcaption>
           </figure>
         </div>
 
@@ -237,17 +307,29 @@
               зареждане.
             </li>
             <li>
-              Повторните зареждания могат да се повлияят от V8 <em>preparser</em>; това се избягва
-              чрез добавяне на случаен низ към URL на скрипта.
+              При повторно посещение на даден сайт, JavaScript енджинът V8 (използван в Google
+              Chrome) използва preparser - компонент, който предварително анализира JavaScript кода,
+              преди той да бъде напълно компилиран. Това позволява по-бързо зареждане на скриптовете
+              при повторни зареждания на страницата.<br />
+              Ако искаме да избегнем кеширането или използването на предварително анализирания код,
+              можем да добавим случаен низ (query string) към URL адреса на скрипта. Така браузърът
+              ще третира файла като нов и няма да използва кеша или оптимизации от предишни
+              посещения. <br />
+              <code>script.src = "script.js?" + Math.random();</code>
             </li>
             <li>
-              Може да се използва <strong>Google Analytics</strong> с персонализиран dimension за
-              измерване на „parse“ време от реални потребители.
+              Можем да използваме User Timing API за измерване на времето, което браузърът отделя за
+              парсване на JavaScript, и да изпращаме тази информация към Google Analytics чрез
+              персонализирани измервания (custom dimensions или metrics). Това позволява да
+              наблюдаваме представянето на сайта от гледна точка на реални потребители.
             </li>
           </ul>
           <figure>
             <img src="images/img6.png" alt="User Timing API" />
-            <figcaption>Изглед от User Timing API</figcaption>
+            <figcaption>
+              Фигура 6: Изглед от User Timing API.
+              <a href=" https://www.debugbear.com/blog/user-timing-api">[10]</a>
+            </figcaption>
           </figure>
         </div>
 
@@ -257,7 +339,7 @@
             Инструментът <strong>DeviceTiming</strong> за измерване на производителността в
             контролирана среда, разработен от Etsy, събира данни с висока точност за това колко
             бързо се зареждат и визуализират страниците на устройствата на потребителите. Метрики за
-            клиентската страна (като например кога се появява основното съдържание) – помага за
+            клиентската страна (като например кога се появява основното съдържание) - помага за
             откриване на забавяния при различни устройства и оптимизиране скоростта на сайта според
             реалното потребителско изживяване.
           </p>
@@ -268,13 +350,22 @@
               Позволява сравнение на поведение между устройства като лаптопи, телефони и таблети.
             </li>
             <li>
-              Описан подробно в статията на Daniel Espeset –
-              <em>Benchmarking JS Parsing and Execution on Mobile Devices</em>.
+              Описан подробно в статията на Daniel Espeset -
+              <a
+                href="https://speakerdeck.com/desp/unpacking-the-black-box-benchmarking-js-parsing-and-execution-on-mobile-devices"
+                ><em>Benchmarking JS Parsing and Execution on Mobile Devices</em>.</a
+              >
             </li>
           </ul>
           <figure>
             <img src="images/img7.webp" alt="Изглед от DeviceTiming" />
-            <figcaption>Изглед от DeviceTiming</figcaption>
+            <figcaption>
+              Фигура 7: Изглед от DeviceTiming.
+              <a
+                href="https://medium.com/reloading/preload-prefetch-and-priorities-in-chrome-776165961bbf"
+                >[5]</a
+              >
+            </figcaption>
           </figure>
         </div>
       </section>
@@ -319,13 +410,19 @@
             <li>
               Когато preload използва атрибута <code>as</code>, приоритетът съответства на типа
               <code>ресурс</code> :<br />
-              <code>as="style"</code> – най-висок приоритет <br />
-              <code>as="script"</code> – среден до нисък приоритет.
+              <code>as="style"</code> - най-висок приоритет <br />
+              <code>as="script"</code> - среден до нисък приоритет.
             </li>
           </ul>
           <figure>
             <img src="images/img8.webp" alt="DevTools priorities mapping" />
-            <figcaption>DevTools priorities mapping</figcaption>
+            <figcaption>
+              Фигура 8: DevTools priorities mapping.
+              <a
+                href="https://medium.com/reloading/preload-prefetch-and-priorities-in-chrome-776165961bbf"
+                >[5]</a
+              >
+            </figcaption>
           </figure>
 
           <div class="tool tools-testing">
@@ -333,17 +430,28 @@
             <ul>
               <li>
                 <strong>Мрежов панел (Network Panel):</strong> Анализира размера и времето за
-                зареждане на всеки ресурс, идентифицира тесни места и наблюдава реда на зареждане на
-                скриптовете.
+                зареждане на всеки ресурс. Идентифицира слаби места (bottlenecks) и проблеми с
+                последователността при извикването на JavaScript скриптове.
+                <figure>
+                  <img src="images/img9.1.png" alt="Изглед от chrome-tracing" />
+                  <figcaption>Фигура 9.1: Изглед от мрежов панел. Авторова снимка</figcaption>
+                </figure>
               </li>
               <li>
                 <strong>Панел за производителност (Performance Panel):</strong> Записва и инспектира
-                времевата линия на изпълнение на скриптове – помага за откриване на блокиращи
-                процеси
+                времевата линия на изпълнение на скриптове. Използва се за откриване на забавяния,
+                блокиращи операции и неефективни участъци от кода.
+                <figure>
+                  <img src="images/img9.2.png" alt="Изглед от chrome-tracing" />
+                  <figcaption>
+                    Фигура 9.2: Изглед от панел за производителност. Авторова снимка
+                  </figcaption>
+                </figure>
               </li>
             </ul>
             <p>
-              Инструменти като Lighthouse и WebPageTest предоставят метрики за производителност:
+              Представят набор от ключови метрики, чрез които се измерва и подобрява ефективността
+              на уеб приложения:
             </p>
             <ul>
               <li>
@@ -363,7 +471,25 @@
                 е блокиран от дълги JavaScript задачи (над 50 ms). Високият TBT показва, че
                 JavaScript блокира основния поток
               </li>
-              <li>Други.</li>
+              <li>
+                <strong>Largest Contentful Paint (LCP)</strong> Времето до появата на най-големия
+                видим елемент в прозореца (обикновено изображение или голям текстов блок). Показва
+                кога основното съдържание е заредено.
+              </li>
+              <li>
+                <strong>Time to Interactive (TTI)</strong> Кога страницата става напълно
+                интерактивна (потребителят може да взаимодейства без забавяне). JavaScript може да
+                забави това време.
+              </li>
+              <li>
+                <strong>Cumulative Layout Shift (CLS)</strong> Неочаквани промени в оформлението на
+                страницата по време на зареждане. Висок CLS е дразнещ за потребителите – елементите
+                "подскачат".
+              </li>
+              <li>
+                Други разнообразни метрики като Speed Index (SI), DOMContentLoaded (DCL), Fully
+                Loaded Time, Connection Time / DNS Lookup Time / SSL Negotiation
+              </li>
             </ul>
           </div>
         </div>
@@ -377,50 +503,79 @@
             <h2>Code Caching: по-бързо зареждане чрез избягване на компилиране</h2>
             <article class="content">
               <p>
-                Механизъм за съхранение на локално копие на компилиран JavaScript код. Целта е да се
-                избегнат скъпите операции като изтегляне, парсване и компилиране при последващи
-                посещения на уеб страницата. В началото този механизъм позволява да се пропуска
-                приблизително <strong>45% от времето за компилация</strong> при вторични зареждания.
+                Механизмът за кеширане на код позволява съхранение на вече компилиран JavaScript код
+                в локален кеш (например в браузъра). При последващи посещения на същата уеб
+                страница, този код може да бъде директно използван, без нужда от повторно парсване и
+                компилиране. Това значително намалява времето за зареждане. В началните реализации
+                на този метод е било възможно да се спести около 45% от времето, отделяно за
+                компилация, което представлява подобрение, дори ако не напълно елиминира нуждата от
+                компилиране.
               </p>
 
               <h3>Как работи кеширането на код?</h3>
               <p>
-                В някои платформи като Google V8 — кеширането се активира за скриптове или Service
-                Worker скриптове, които се изпълняват
-                <strong>два пъти в рамките на 72 часа</strong>.<br />
-                За скриптове, съхранени в Cache Storage чрез Service Worker — кеширането се активира
-                при <strong>първото изпълнение</strong>.
+                Когато даден JavaScript файл бъде зареден и изпълнен
+                <strong>два пъти в рамките на 72 часа</strong>, Google V8 Engine счита, че този
+                скрипт е "често използван".
+                <br />
+                В този случай, при третото зареждане, браузърът използва
+                <strong>вече компилираната версия</strong> на кода, вместо отново да го парсва и
+                компилира. Това спестява време и ускорява зареждането на страницата.
               </p>
               <p>
-                Aко кодът подлежи на кеширане, V8 ще <strong>пропусне</strong> парсването и
-                компилирането при третото зареждане, което значително ускорява зареждането на
-                страницата.
+                Кешът за компилирани скриптове трае обикновено няколко дни до седмица освен ако
+                потребителя не го изтрие преждевременно или не заема твърде много място. Няма
+                официално публикувана точна продължителност.
               </p>
 
               <h3>Детайли и инструменти</h3>
               <p>
-                За по-задълбочен се използват експерименталните опции в
+                За по-подробен анализ на кеширащото поведение се използват експерименталните опции в
                 <code>chrome://flags/#v8-cache-strategies-for-cache-storage</code> за наблюдаване на
                 разликите в поведението при кеширане.
               </p>
               <p>
                 Флагът в Chrome
                 <code>--js-flags=--profile-deserialization</code>, показва дали даден скрипт се
-                зарежда директно от кеша — това се визуализира като
+                зарежда директно от кеша - това се визуализира като
                 <strong>"deserialization events"</strong> в Chrome Tracing логовете.
               </p>
 
               <h3>Ограничения и особености</h3>
               <p>
-                <strong>Само eagerly compiled код</strong> се кешира. Това включва главния код,
-                който се изпълнява веднъж за инициализация на глобални стойности.
+                Само <strong>"eagerly compiled" (предварително компилиран)</strong> се кешира - това
+                означава, че кеширането важи само за частите от JavaScript кода, които се изпълняват
+                веднага, когато скриптът се зареди. Това включва главния код в скрипта,
+                инициализация на променливи и стойности в глобалния scope.<br />
+                Не се кешира код, който се изпълнява само при потребителски действия.
               </p>
               <p>
-                Функции, които се дефинират но не се извикват веднага, обикновено се компилират
-                <em>lazy</em> и не винаги се кешират. За сметка на това,
-                <strong>IIFE</strong> (Immediately Invoked Function Expressions), които са често
-                използвани в инструменти като <code>optimize-js</code>, се включват в кеша, тъй като
-                се компилират веднага.
+                Функции, които се дефинират но не се извикват веднага, също се компилират
+                <em>lazy</em> и не се кешират. За сметка на това, <strong>IIFE</strong> (Immediately
+                Invoked Function Expressions) се включват в кеша, тъй като се компилират веднага.
+              </p>
+              <h4>Пример: Какво се кешира и какво не</h4>
+              <pre><code class="language-js">
+// Този код се компилира и кешира
+const userLocale = navigator.language;
+console.log(`Зареден език: ${userLocale}`);
+
+// Този няма да бъде кеширан, ако функцията не се извика веднага
+function fetchUserData() {
+  // Скъпо изчисление или заявка, която се изпълнява по-късно
+  console.log("Извличане на потребителски данни...");
+}
+
+// Това също не се кешира, ако се извиква след време (например при събитие)
+document.addEventListener("click", () => {
+  fetchUserData();
+});
+</code></pre>
+
+              <p>
+                <strong>Обяснение:</strong> Първите редове код се изпълняват веднага при зареждане и
+                се кешират от V8. Функциите и обработката на събития, които се изпълняват по-късно,
+                не подлежат на кеширане.
               </p>
             </article>
           </section>
@@ -439,15 +594,17 @@
               </p>
 
               <p>
-                Откакто функцията беше въведена <strong>V8</strong> премина към позволяване на
-                всички скриптове, дори блокиращите <code>&lt;script src=""&gt;</code> — да бъдат
-                парсвани на фонови нишки. Това води до значителни подобрения в производителността.
+                След въвеждането на функционалността Script Streaming, JavaScript engine V8 започна
+                да позволява парсването на всички скриптове - включително блокиращите тагове
+                <code>&ltscript src=""&gt</code> - във фонови нишки (background threads). Това
+                позволява едновременното изтегляне и парсване на скриптовете, което намалява времето
+                за зареждане и води до подобрение в производителността..
               </p>
 
-              <h3>Ограничения и най-добри практики</h3>
+              <h3>Ограничения и добри практики</h3>
               <p>
                 Има само <strong>една нишка за парсване</strong> чрез стрийминг, така че е важно
-                големите или критични скриптове да се поставят първи — така те ще бъдат хванати от
+                големите или критични скриптове да се поставят първи - така те ще бъдат хванати от
                 механизма. <br />
                 Добра практика е да се използва
                 <code>&lt;script defer&gt;</code> в <code>&lt;head&gt;</code>, за да позволим ранно
@@ -461,8 +618,14 @@
                 времето за парсване, той трябва да се възползва от механизма за фоново парсване.
               </p>
               <figure>
-                <img src="images/img9.webp" alt="" />
-                <figcaption></figcaption>
+                <img src="images/img10.webp" alt="Пример за времева линия в Chrome DevTools" />
+                <figcaption>
+                  Фигура 10: Пример за времева линия в Chrome DevTools.
+                  <a
+                    href="https://medium.com/reloading/javascript-start-up-performance-69200f43b201"
+                    >[2]</a
+                  >
+                </figcaption>
               </figure>
             </article>
           </section>
@@ -487,14 +650,27 @@
             </p>
 
             <p>
-              <strong>Недостатъци: </strong>Размер на байткода — Предварително компилирани скриптове
+              <strong>Недостатъци: </strong>Размер на байткода - Предварително компилирани скриптове
               често са по-големи от оригиналния JavaScript, което може да удължи времето за
               изтегляне и зареждане.
             </p>
           </section>
           <figure>
-            <img src="images/img10.png" alt="" />
-            <figcaption></figcaption>
+            <img src="images/img11.png" alt="Пример за предварителна компилация на JavaScript" />
+            <figcaption>
+              Фигура 11: Пример за предварителна компилация на JavaScript.
+              <a href="https://medium.com/reloading/javascript-start-up-performance-69200f43b201"
+                ><a href="https://medium.com/reloading/javascript-start-up-performance-69200f43b201"
+                  ><a
+                    href="https://medium.com/reloading/javascript-start-up-performance-69200f43b201"
+                    ><a
+                      href="https://medium.com/reloading/javascript-start-up-performance-69200f43b201"
+                      >[2]</a
+                    ></a
+                  ></a
+                ></a
+              >
+            </figcaption>
           </figure>
         </article>
       </section>
@@ -505,7 +681,7 @@
       <div class="source-columns">
         <div class="source-group">
           <h3>Основни</h3>
-          <ul class="source-list">
+          <ol class="source-list">
             <li>
               <a
                 href="https://medium.com/dev-channel/the-cost-of-javascript-84009f51e99e"
@@ -519,47 +695,53 @@
               <a
                 href="https://medium.com/reloading/javascript-start-up-performance-69200f43b201"
                 target="_blank"
-                >Addy Osmani, "JavaScript Start-up Performance", публикуван на 09-02-2017</a
               >
-            </li>
-            <li>
-              <a href="https://web.dev/articles/apply-instant-loading-with-prpl" target="_blank"
-                >Houssein Djirdeh, "Apply Instant Loading with PRPL", актуализиран на 05-11-2018
+                Addy Osmani, "JavaScript Start-up Performance", публикуван на 09-02-2017
               </a>
             </li>
-          </ul>
-        </div>
-
-        <div class="source-group">
-          <h3>Второстепенни</h3>
-          <ul class="source-list">
+            <li>
+              <a href="https://web.dev/articles/apply-instant-loading-with-prpl" target="_blank">
+                Houssein Djirdeh, "Apply Instant Loading with PRPL", актуализиран на 05-11-2018
+              </a>
+            </li>
             <li>
               <a
                 href="https://developer.mozilla.org/en-US/docs/Learn_web_development/Extensions/Performance/JavaScript"
                 target="_blank"
-                >MDN: JS Performance</a
               >
+                MDN: JS Performance
+              </a>
             </li>
             <li>
               <a
                 href="https://medium.com/reloading/preload-prefetch-and-priorities-in-chrome-776165961bbf"
                 target="_blank"
               >
-                Addy Osmani, "Preload, Prefetch and Priorities in Chrome", 27-03-2017</a
-              >
+                Addy Osmani, "Preload, Prefetch and Priorities in Chrome", 27-03-2017
+              </a>
             </li>
             <li>
-              <a href="https://web.dev/articles/fcp" target="_blank"
-                >First Contentful Paint (FCP)</a
-              >
+              <a href="https://web.dev/articles/fcp" target="_blank">
+                First Contentful Paint (FCP)
+              </a>
             </li>
             <li>
-              <a href="https://web.dev/articles/tbt" target="_blank">Total Blocking Time (TBT)</a>
+              <a href="https://web.dev/articles/tbt" target="_blank"> Total Blocking Time (TBT) </a>
             </li>
             <li>
-              <a href="https://web.dev/articles/ttfb" target="_blank">Time to First Byte (TTFB)</a>
+              <a href="https://web.dev/articles/ttfb" target="_blank">
+                Time to First Byte (TTFB)
+              </a>
             </li>
-          </ul>
+            <li>
+              <a href="https://www.webpagetest.org/" target="_blank"> WebPageTest </a>
+            </li>
+            <li>
+              <a href="https://www.debugbear.com/blog/user-timing-api" target="_blank">
+                The User Timing API: Custom Front-end Performance Metrics
+              </a>
+            </li>
+          </ol>
         </div>
       </div>
     </footer>
