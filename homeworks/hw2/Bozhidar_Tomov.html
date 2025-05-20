@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="bg">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Регистрация на домашен любимец</title>
+    <style>
+      body {
+        font-family: "Arial", sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        background: linear-gradient(135deg, #f0f8ff, #e6e6fa);
+        padding: 40px 0;
+      }
+      .container {
+        display: flex;
+        flex-wrap: wrap;
+        background: white;
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        max-width: 800px;
+        width: 100%;
+      }
+      .image-container {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 15px;
+        border-right: 1px solid #ddd;
+      }
+      .image-container img {
+        width: 100%;
+        max-width: 250px;
+        height: auto;
+        object-fit: contain;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      .form-container {
+        flex: 2;
+        padding: 20px;
+      }
+      form {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
+      label {
+        font-weight: bold;
+        margin-bottom: 5px;
+      }
+      input,
+      select,
+      button {
+        width: 100%;
+        padding: 12px;
+        margin: 5px 0;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 1rem;
+      }
+      input:focus,
+      select:focus {
+        outline: none;
+        border-color: #007bff;
+        box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+      }
+      .radio-group {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+      }
+      .radio-group input[type="radio"] {
+        display: none;
+      }
+      .radio-group label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 20px;
+        border: 1px solid #ccc;
+        border-radius: 25px;
+        cursor: pointer;
+        transition: background-color 0.3s ease, border-color 0.3s ease;
+        background-color: #f8f9fa;
+        color: #333;
+      }
+      .radio-group input[type="radio"]:checked + label {
+        background-color: #28a745;
+        color: white;
+        border-color: #28a745;
+      }
+      .radio-group label:hover {
+        background-color: #e9ecef;
+      }
+      .buttons {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      .buttons button {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+        border-radius: 25px;
+        padding: 10px 20px;
+        font-size: 1rem;
+        transition: background-color 0.3s ease;
+      }
+      .buttons button:hover {
+        background-color: #0056b3;
+      }
+      .weight-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .weight-group input {
+        flex: 1;
+      }
+      .weight-group span {
+        font-size: 1rem;
+        font-weight: bold;
+        color: #555;
+      }
+      .date-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+      .date-group input {
+        padding: 12px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+      }
+      .date-group input:focus {
+        outline: none;
+        border-color: #007bff;
+        box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="image-container">
+        <img src="dog.jpg" alt="Домашен любимец" />
+      </div>
+      <div class="form-container">
+        <form>
+          <label for="pet-name">Име на домашния любимец:</label>
+          <input type="text" id="pet-name" required />
+
+          <label for="pet-photo">Качете снимка:</label>
+          <input type="file" id="pet-photo" accept="image/*" />
+
+          <label for="pet-breed">Порода:</label>
+          <select id="pet-breed">
+            <option>Лабрадор</option>
+            <option>Голдън ретривър</option>
+            <option>Джак Ръсел териер</option>
+            <option>Немска овчарка</option>
+            <option>Френски булдог</option>
+          </select>
+
+          <label for="birth-date">Рожден ден:</label>
+          <div class="date-group">
+            <input type="date" id="birth-date" />
+          </div>
+
+          <label>Пол:</label>
+          <div class="radio-group">
+            <input type="radio" id="male" name="gender" value="Мъжки" checked />
+            <label for="male">Мъжки</label>
+            <input type="radio" id="female" name="gender" value="Женски" />
+            <label for="female">Женски</label>
+          </div>
+
+          <label for="weight">Тегло:</label>
+          <div class="weight-group">
+            <input type="number" id="weight" min="1" max="100" step="0.5" />
+            <span>кг</span>
+          </div>
+
+          <div class="buttons">
+            <button type="button">Back</button>
+            <button type="submit">Next</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </body>
+</html>

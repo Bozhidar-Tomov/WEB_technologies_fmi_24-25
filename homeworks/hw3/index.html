@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="bg">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="style.css" />
+    <title>Регистрация</title>
+  </head>
+  <body>
+    <form id="registration-form">
+      <h1>Форма за регистрация</h1>
+      <div>
+        <label for="username">Потребителско име:<span class="required-star">*</span></label>
+        <input type="text" id="username" required placeholder="great_username" />
+        <div class="error" id="username-error"></div>
+      </div>
+      <div>
+        <label for="name">Име:<span class="required-star">*</span></label>
+        <input type="text" id="name" required placeholder="Божидар" />
+        <div class="error" id="name-error"></div>
+      </div>
+      <div>
+        <label for="family-name">Фамилия:<span class="required-star">*</span></label>
+        <input type="text" id="family-name" required placeholder="Томов" />
+        <div class="error" id="family-error"></div>
+      </div>
+      <div>
+        <label for="email">Имейл:<span class="required-star">*</span></label>
+        <input type="email" id="email" required placeholder="name@complany.com" />
+        <div class="error" id="email-error"></div>
+      </div>
+      <div>
+        <label for="password">Парола:<span class="required-star">*</span></label>
+        <input
+          type="password"
+          id="password"
+          required
+          placeholder="6-10 символа, цифри, малки и големи букви"
+        />
+        <div class="error" id="password-error"></div>
+      </div>
+      <div>
+        <label for="street">Улица:</label>
+        <input type="text" id="street" placeholder="бул. България 12" />
+      </div>
+      <div>
+        <label for="city">Град:</label>
+        <input type="text" id="city" placeholder="София" />
+      </div>
+      <div>
+        <label for="postal-code">Пощенски код:</label>
+        <input type="text" id="postal-code" placeholder="1000 или 10000-1234" />
+        <div class="error" id="postal-error"></div>
+      </div>
+      <button type="submit" id="register-btn">Регистрация</button>
+      <div id="success"></div>
+    </form>
+
+    <script type="module" src="script.js"></script>
+  </body>
+</html>

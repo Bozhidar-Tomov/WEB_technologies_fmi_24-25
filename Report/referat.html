@@ -4,6 +4,12 @@
     <meta charset="UTF-8" />
     <title>Оценка на JavaScript приложенията</title>
     <link rel="stylesheet" href="css/style.css" />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
   </head>
   <body>
     <header id="header">
@@ -555,7 +561,7 @@
                 Invoked Function Expressions) се включват в кеша, тъй като се компилират веднага.
               </p>
               <h4>Пример: Какво се кешира и какво не</h4>
-              <pre><code class="language-js">
+              <pre><code class="language-javascript">
 // Този код се компилира и кешира
 const userLocale = navigator.language;
 console.log(`Зареден език: ${userLocale}`);
