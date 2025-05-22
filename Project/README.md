@@ -1,6 +1,6 @@
 # CrowdPulse Project
 
-## Repository code structure
+## Project code structure
 
 ```composer.json           # Project dependencies
 README.md               # Project documentation
