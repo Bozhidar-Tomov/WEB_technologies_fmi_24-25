@@ -2,7 +2,8 @@
 
 ## Project code structure
 
-```composer.json           # Project dependencies
+```plaintext
+composer.json           # Project dependencies
 README.md               # Project documentation
 
 app/
