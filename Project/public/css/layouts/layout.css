@@ -1,0 +1,72 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html,
+body {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    color: #eeeeee;
+    background-color: rgb(29, 2, 21);
+    line-height: 1.6;
+    background-image: url('../../media/wave.png'), url('../../media/good2.png');
+    background-repeat: no-repeat, repeat;
+    background-size: contain, 250px 250px;
+    background-position: center, top left;
+
+}
+
+.logo img {
+    height: 50px;
+    margin-right: 20px;
+}
+
+header .site-title {
+    font-family: 'Metal Mania', cursive !important;
+    text-align: center;
+    padding: 15px 30px;
+}
+
+
+
+header .site-title h1 {
+    font-size: 3.5rem;
+    letter-spacing: 12px;
+}
+
+header .site-title h2 {
+    color: rgb(203, 153, 196);
+    font-size: 2rem;
+    margin-top: 0;
+    letter-spacing: 8px;
+}
+
+
+main {
+    padding: 30px 20px;
+    flex: 1;
+}
+
+
+footer {
+    text-align: center;
+    padding: 15px;
+    background-color: #1c1c1c;
+    font-family: Arial, sans-serif;
+}
+
+.project-name {
+    font-weight: bold;
+}
+
+.separator {
+    margin: 0 20px;
+    color: #ccc;
+}

@@ -39,7 +39,8 @@ public/
 └── media/              # Audio/video assets for emotions
 
 routes/
-└── web.php             # Route definitions (connect URLs to controllers)
+└── routes.php             # Route definitions (connect URLs to controllers)
+└── Router.php             # Map HTTP requests to controllers
 ```
 
 Apache server start point `Project/public`
@@ -49,8 +50,6 @@ Apache server start point `Project/public`
 The project aims to create a system for directing and managing audience emotions such as applause, cheering, booing, murmuring, stomping, and more, in a coordinated or choreographed manner.
 
 ### Functional requirements
-
-Core Features and Functional Requirements
 
 1. Audience Reaction Commands
     The system sends predefined reaction commands to the audience, such as:
