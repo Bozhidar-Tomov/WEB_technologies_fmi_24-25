@@ -16,7 +16,7 @@ body {
     color: #eeeeee;
     background-color: rgb(29, 2, 21);
     line-height: 1.6;
-    background-image: url('../../media/wave.png'), url('../../media/good2.png');
+    background-image: url('../../media/wave.png'), url('../../media/drums.png');
     background-repeat: no-repeat, repeat;
     background-size: contain, 250px 250px;
     background-position: center, top left;
@@ -50,10 +50,12 @@ header .site-title h2 {
 
 
 main {
-    padding: 30px 20px;
     flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 15px 20px;
 }
-
 
 footer {
     text-align: center;
@@ -69,4 +71,88 @@ footer {
 .separator {
     margin: 0 20px;
     color: #ccc;
+}
+
+.common-container {
+    text-align: center;
+    padding: 60px 80px;
+    border-radius: 12px;
+    max-width: 700px;
+    margin: 40px auto;
+    background: rgba(255, 255, 255, 0.2);
+
+    box-shadow: 0 8px 32px 0 rgba(203, 153, 196, 0.34);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+
+    border: 1px solid rgb(203, 153, 196, 0.6);
+    color: #ffffff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.common-container h2 {
+    font-weight: 600;
+    font-size: 1.9rem;
+    margin-bottom: 36px;
+}
+
+.btn {
+    padding: 16px 40px;
+    font-size: 1.25rem;
+    border-radius: 8px;
+    padding: 12px 28px;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 1rem;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.12);
+    cursor: pointer;
+    user-select: none;
+    display: inline-block;
+}
+
+.btn-primary {
+    background-color: rgb(196, 148, 209);
+    ;
+    color: white;
+    border: 2px solid transparent;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background-color: rgb(125, 86, 135);
+    box-shadow: 0 6px 12px rgb(111, 75, 121, 0.4);
+    outline: none;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+    border: 2px solid transparent;
+}
+
+.btn-secondary:hover,
+.btn-secondary:focus {
+    background-color: #565e64;
+    box-shadow: 0 6px 12px rgba(86, 94, 100, 0.4);
+    outline: none;
+}
+
+.link {
+    display: inline-block;
+    margin-top: 24px;
+    font-size: 1.15rem;
+    color: rgb(212, 158, 205);
+    text-decoration: none !important;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+.link:hover,
+.link:focus {
+    text-decoration: underline;
+
+    color: rgb(239, 221, 236);
+    outline: none;
 }

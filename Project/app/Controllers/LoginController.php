@@ -1,5 +1,7 @@
 <?php
-require_once 'BaseController.php';
+require_once __DIR__ . '/BaseController.php';
+require_once __DIR__ . '/../Models/User.php';
+require_once __DIR__ . '/../Services/ValidationService.php';
 
 use App\Models\User;
 use App\Services\ValidationService;
@@ -25,7 +27,15 @@ class LoginController extends BaseController
             try {
                 $user = User::findByUsername($username);
                 if ($user && password_verify($password, $user->password)) {
-                    $this->render('login_success', ['username' => htmlspecialchars($username)]);
+                    $roomData = [
+                        'username' => htmlspecialchars($user->username),
+                        'role' => $user->role ?? '',
+                        'points' => $user->points ?? 0,
+                        'groups' => $user->groups ?? [],
+                        'tags' => $user->tags ?? [],
+                        'gender' => $user->gender ?? '',
+                    ];
+                    $this->render('room', $roomData);
                     return;
                 } else {
                     $errors[] = 'Invalid username or password.';

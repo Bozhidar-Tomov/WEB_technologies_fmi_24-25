@@ -1,6 +1,8 @@
 <?php
 
-require_once 'BaseController.php';
+require_once __DIR__ . '/BaseController.php';
+require_once __DIR__ . '/../Models/User.php';
+require_once __DIR__ . '/../Services/ValidationService.php';
 
 use App\Models\User;
 use App\Services\ValidationService;

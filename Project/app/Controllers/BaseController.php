@@ -10,12 +10,12 @@ class BaseController
         ob_start();
         if (file_exists($viewFile)) {
             extract($data);
-            include $viewFile;
+            require $viewFile;
         } else {
-            $viewFile = __DIR__ . '/../Views/notFound.php';
-            include $viewFile;
+            $viewFile = __DIR__ . '/../Views/404.php';
+            require $viewFile;
         }
         $content = ob_get_clean();
-        include __DIR__ . '/../Views/layout.php';
+        require __DIR__ . '/../Views/layout.php';
     }
 }
