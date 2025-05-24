@@ -40,7 +40,7 @@ public/
 
 routes/
 └── routes.php             # Route definitions (connect URLs to controllers)
-└── Router.php             # Map HTTP requests to controllers
+└── Router.php             # Core routing logic that maps HTTP requests to controllers
 ```
 
 Apache server start point `Project/public`
