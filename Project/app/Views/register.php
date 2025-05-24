@@ -1,38 +1,26 @@
-<!DOCTYPE html>
-<html lang="en">
+<div class="common-container register">
+    <h1>Register</h1>
 
-<head>
-    <meta charset="UTF-8">
-    <title>Register</title>
-    <?php if (isset($viewStyle)): ?>
-        <link rel="stylesheet" href="<?= $viewStyle ?>">
+    <?php if (!empty($errors)): ?>
+        <div class="errors">
+            <ul>
+                <?php foreach ($errors as $error): ?>
+                    <li><?= htmlspecialchars($error) ?></li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
     <?php endif; ?>
-</head>
 
-<body>
-    <div class="register-container">
-        <h1>Register for CrowdPulse</h1>
+    <form action="/register" method="post">
+        <label for="username">
+            Username:
+            <input type="text" name="username" id="username" autocomplete="username" value="<?= $old['username'] ?? '' ?>" required>
+        </label>
 
-        <?php if (!empty($errors)): ?>
-            <div class="errors">
-                <ul>
-                    <?php foreach ($errors as $error): ?>
-                        <li><?= htmlspecialchars($error) ?></li>
-                    <?php endforeach; ?>
-                </ul>
-            </div>
-        <?php endif; ?>
-
-        <form action="/register" method="post">
-            <label>
-                Username:
-                <input type="text" name="username" value="<?= $old['username'] ?? '' ?>" required>
-            </label>
-
-            <label>
-                Password:
-                <input type="password" name="password" required>
-            </label>
+        <label for="password">
+            Password:
+            <input type="password" name="password" id="password" autocomplete="new-password" required>
+        </label>
 
             <label>
                 Gender:
@@ -53,14 +41,12 @@
                 </select>
             </label>
 
-            <label>
-                Tags (comma-separated, e.g. VIP,Guest,Fan):
-                <input type="text" name="tags">
-            </label>
+        <label for="tags">
+            Tags (comma-separated, e.g. VIP,Guest,Fan):
+            <input type="text" name="tags" id="tags" autocomplete="off">
+        </label>
 
-            <button type="submit">Register</button>
-        </form>
-    </div>
-</body>
-
-</html>
+        <button class=" btn btn-primary" type="submit">Register</button>
+    </form>
+    <p>Already have an account? <a class="link" href="/login">Login here.</a></p>
+</div>

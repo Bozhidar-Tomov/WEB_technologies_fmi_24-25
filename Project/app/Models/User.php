@@ -73,7 +73,7 @@ class User
 
         if ($user) {
             $u = new self();
-            $u->id = (string) $user->id;
+            $u->id = isset($user->_id) ? (string) $user->_id : null;
             $u->username = $user->username;
             $u->role = $user->role;
             $u->groups = $user->groups;
