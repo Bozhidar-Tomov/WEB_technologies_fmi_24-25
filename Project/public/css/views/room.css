@@ -1,0 +1,52 @@
+/* Room View Styles */
+
+.container {
+    padding: 32px 0;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.panel,
+.user-panel,
+.command-panel,
+.meter,
+.transfer-form {
+    background: rgba(255, 255, 255, 0.92);
+    border-radius: 12px;
+    padding: 24px 20px;
+    margin-bottom: 28px;
+    box-shadow: 0 4px 16px rgba(80, 0, 60, 0.08), 0 1.5px 4px rgba(0,0,0,0.04);
+    border: 1px solid #e5d6e8;
+}
+
+.countdown {
+    font-size: 2em;
+    color: #a11d1d;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+.transfer-form input[type="text"],
+.transfer-form input[type="number"] {
+    width: 100%;
+    padding: 8px 10px;
+    margin: 6px 0 12px 0;
+    border: 1px solid #c399c4;
+    border-radius: 5px;
+    background: #f8f3fa;
+}
+
+.transfer-form button[type="submit"] {
+    background: #c399c4;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 18px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.transfer-form button[type="submit"]:hover {
+    background: #a16ca1;
+} 

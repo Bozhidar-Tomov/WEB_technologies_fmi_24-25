@@ -62,6 +62,60 @@ class User
         }
     }
 
+
+    // public static function findById($id)
+    // {
+    //     require __DIR__ . '/../../database/mongo_uri.php';
+    //     $manager = new Manager($uri);
+    //     $filter = ['id' => new ObjectId($id)];
+    //     $query = new Query($filter);
+    //     $cursor = $manager->executeQuery(self::$collection, $query);
+    //     $user = current($cursor->toArray());
+    //     if ($user) {
+    //         $u = new self();
+    //         $u->id = (string) $user->id;
+    //         $u->username = $user->username;
+    //         $u->role = $user->role;
+    //         $u->groups = $user->groups;
+    //         $u->points = $user->points;
+    //         $u->gender = $user->gender;
+    //         $u->arrivalTime = $user->arrivalTime;
+    //         $u->tags = $user->tags;
+    //         return $u;
+    //     }
+    //     return null;
+    // }
+
+    // public static function deleteById($id)
+    // {
+    //     require __DIR__ . '/../../database/mongo_uri.php';
+    //     $manager = new Manager($uri);
+    //     $bulk = new BulkWrite();
+    //     $bulk->delete(['id' => new ObjectId($id)]);
+    //     $manager->executeBulkWrite(self::$collection, $bulk);
+    // }
+
+    // public static function all()
+    // {
+    //     require __DIR__ . '/../../database/mongo_uri.php';
+    //     $manager = new Manager($uri);
+    //     $query = new Query([]);
+    //     $cursor = $manager->executeQuery(self::$collection, $query);
+    //     $users = [];
+    //     foreach ($cursor as $user) {
+    //         $u = new self();
+    //         $u->id = (string) $user->id;
+    //         $u->username = $user->username;
+    //         $u->role = $user->role;
+    //         $u->groups = $user->groups;
+    //         $u->points = $user->points;
+    //         $u->gender = $user->gender;
+    //         $u->arrivalTime = $user->arrivalTime;
+    //         $u->tags = $user->tags;
+    //         $users[] = $u;
+    //     }
+    //     return $users;
+    // }
     public static function findByUsername($username)
     {
         require __DIR__ . '/mongo_uri.php';
@@ -73,7 +127,7 @@ class User
 
         if ($user) {
             $u = new self();
-            $u->id = isset($user->_id) ? (string) $user->_id : null;
+            $u->id = (string) $user->id;
             $u->username = $user->username;
             $u->role = $user->role;
             $u->groups = $user->groups;

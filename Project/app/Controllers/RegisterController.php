@@ -14,11 +14,6 @@ class RegisterController extends BaseController
         $this->render('register');
     }
 
-    public function index()
-    {
-        $this->render('index', ['title' => 'Crowd Pulse']);
-    }
-
     public function handleRegistration()
     {
         $data = [
@@ -70,6 +65,7 @@ class RegisterController extends BaseController
             ];
 
             $this->render('room', [
+                'title' => 'Room View - Audience Control',
                 'username' => htmlspecialchars($user->username),
                 'role'     => $user->role,
                 'points'   => $user->points,

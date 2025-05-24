@@ -28,6 +28,7 @@ class LoginController extends BaseController
                 $user = User::findByUsername($username);
                 if ($user && password_verify($password, $user->password)) {
                     $roomData = [
+                        'title' => 'Room View - Audience Control',
                         'username' => htmlspecialchars($user->username),
                         'role' => $user->role ?? '',
                         'points' => $user->points ?? 0,
