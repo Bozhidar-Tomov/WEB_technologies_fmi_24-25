@@ -1,16 +1,17 @@
 # CrowdPulse Project
 
-## Project code structure
+## Overview
 
-The structure follows MVC Flow.
+CrowdPulse is a web application for directing and managing audience emotions (applause, cheering, booing, murmuring, stomping, etc.) in a coordinated or choreographed manner. It supports both live and simulated audience modes, real-time admin controls and audience segmentation.
 
-User visits: `http://localhost/Project/public/`
-         ↓
-public/index.php → front controller
-         ↓
-app/Controllers/HomeController.php → business logic
-         ↓
-app/Views/index.php → HTML page (user sees this)
+## Project Structure
+
+The project follows an MVC flow:
+
+- User visits: `http://localhost/Project/public/`
+- `public/index.php` → front controller (routes all requests)
+- `app/Controllers/HomeController.php` → business logic
+- `app/Views/index.php` → HTML page (user sees this)
 
 ```plaintext
 composer.json           # Project dependencies
@@ -39,89 +40,99 @@ public/
 └── media/              # Audio/video assets for emotions
 
 routes/
-└── routes.php             # Route definitions (connect URLs to controllers)
-└── Router.php             # Core routing logic that maps HTTP requests to controllers
+└── routes.php          # Route definitions (connect URLs to controllers)
+└── Router.php          # Core routing logic that maps HTTP requests to controllers
 ```
 
-Apache server start point `Project/public`
+Apache server start point: `Project/public`
 
-### Concept Overview
+## Features & Functional Overview
 
-The project aims to create a system for directing and managing audience emotions such as applause, cheering, booing, murmuring, stomping, and more, in a coordinated or choreographed manner.
+### Audience Reaction Commands
 
-### Functional requirements
+- Admins can send predefined reaction commands (e.g., "Applaud now", "Boo loudly in 3...2...1", "Cheer for 5 seconds").
+- Commands can be triggered by countdowns, on-screen instructions, gestures, or manual admin input.
 
-1. Audience Reaction Commands
-    The system sends predefined reaction commands to the audience, such as:
+### Visual & Audio Cues
 
-    - "Applaud now"
-    - "Boo loudly in 3...2...1"
-    - "Cheer for 5 seconds"
-    - Signals can be triggered by:
-    - Countdown timer (visual/audio)
-    - On-screen instructions
-    - Gestures from a presenter or performer
-    - Manual trigger from an event admin
+- Commands appear on audience screens (mobile/web-based).
+- Optional synchronized lighting/sound cues (e.g., flash or tone before a reaction).
 
-2. Visual & Audio Cues
-    Commands appear on audience screens (mobile/web-based)
-    Optional synchronized lighting/sound cues (e.g., flash or tone before a reaction)
+### Simulated Audience Mode
 
-3. Simulated Audience Mode
+- Virtual audience members have pre-recorded sound files for each reaction type.
+- System randomly selects a variation, plays it at a randomized volume and time offset, creating a realistic ripple effect.
 
-    - Each virtual audience member has one or more pre-recorded sound files for each reaction type
-    - Upon receiving a command, the system:
-    - Randomly selects a variation
-    - Plays it at a randomized volume and time offset
-    - This creates the effect of a real audience ("Mexican wave", ripple reactions, etc.)
+### Audience Segmentation
 
-4. Audience Segmentation- Participants can be organized into dynamic or static groups:
+- Participants can be grouped by gender, seating zone, arrival time, or custom tags (VIPs, fans, guests).
+- Reactions can be targeted to specific groups.
 
-    - Gender (male/female)
-    - Seating zones
-    - Arrival time (e.g., first 50 attendees)
-    - Custom tags (e.g., VIPs, fans, guests)
-    - Reactions can be targeted to specific groups
+### Gamification & Points System
 
-5. Gamification & Points System- When in live (non-simulation) mode:
+- In live mode, audience members earn points for participation and timing.
+- Points unlock new reactions, customize avatars/sounds, or can be gifted.
+- Leaderboards and statistics encourage engagement.
 
-    - Each audience member is scored based on:
-    - How often they respond
-    - Accuracy/timing of their responses
-    - Earned points can be used to:
-    - Unlock new reaction types/sounds
-    - Customize avatar or sound profile
-    - Transfer or gift points to others
-    - Leaderboards and statistics may be shown for engagement
+### Roles & Permissions
 
-6. Audience Roles and Permissions- Roles include:
+- Roles: Active Participant, Passive Viewer, Group Leader.
+- Invitations can be based on points, participation, or admin selection.
 
-    - Active Participant (can react)
-    - Passive Viewer (can observe, not interact)
-    - Group Leader (leads smaller groups)
-    - Participants may be invited to specific events based on:
-    - Point threshold
-    - Prior participation
-    - Admin invitation
+### Admin & Moderation Panel
 
-7. Admin and Event Moderation Panel- Admins can:
+- Schedule/configure events, assign roles, send live commands, monitor engagement, view analytics, and manage participants.
 
-    - Schedule and configure events
-    - Assign roles (audience, host, co-host)
-    - Send live commands to audience
-    - Monitor engagement and sound levels in real-time
-    - View reaction analytics (when, how many responded, intensity, etc.)
-    - Accept or reject participant applications based on ranking or availability
+### Sound Intensity Monitoring
 
-8. Sound Intensity Monitoring- Each reaction has an intensity scale (0-100):
+- Each reaction has an intensity scale (0-100).
+- Optional live decibel monitoring for physical/hybrid events.
 
-    - Example: Applause intensity 5 = weak clapping, 90 = thunderous ovation
-    - Optional live decibel monitoring using microphones:
-    - Real-time measurement of audience volume
-    - Useful for physical venues or hybrid events
+### Public Participation Link
 
-9. Public Participation Link- A quick-join link is generated for each event:
+- Quick-join link for each event.
+- Participants can join as active audience or observer (if not eligible).
 
-    - Participants can join as:
-    - Active audience
-    - Observer (audience of the audience) - if not eligible for participation
+## Command Structure
+
+Commands follow this structure:
+
+```json
+{
+  "type": "command",
+  "command": "<command_type>",
+  "countdown": <countdown_seconds>,
+  "intensity": <intensity_value>,
+  "duration": <duration_seconds>,
+  "targetGroups": ["group1", "group2"],
+  "message": "<custom_message>"
+}
+```
+
+## Available Commands
+
+- clap/applaud: Users clap their hands
+- cheer: Users cheer vocally
+- boo: Users express disapproval
+- murmur: Users talk quietly among themselves
+- stomp: Users stomp their feet
+- silence: Users remain quiet
+
+## How It Works
+
+- Admin commands are stored in a JSON file.
+- Users' browsers connect to an SSE endpoint that streams commands in real-time.
+- Browsers without SSE support fall back to periodic polling.
+- No dependencies required: uses Server-Sent Events (SSE) instead of WebSockets.
+
+## Browser Compatibility
+
+Server-Sent Events are supported by all modern browsers:
+
+- Chrome 9+
+- Firefox 6+
+- Safari 5+
+- Edge 12+
+- Opera 11.5+
+
+For older browsers (e.g., IE), the app falls back to JSON polling.
