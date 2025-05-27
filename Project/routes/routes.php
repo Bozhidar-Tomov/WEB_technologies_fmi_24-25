@@ -11,7 +11,7 @@ $router->post('/register', 'RegisterController@handleRegistration');
 $router->get('/logout', 'LogoutController@logout');
 
 // Admin dashboard and command routes
-$router->get('/admin/dashboard', 'AdminController@index');
+$router->get('/admin', 'AdminController@index');
 $router->post('/admin/send-command', 'AdminController@sendCommand');
 
 // Reaction routes

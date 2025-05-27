@@ -10,6 +10,10 @@ class LoginController extends BaseController
 {
     public function showForm()
     {
+        if (isset($_SESSION['user'])) {
+            header('Location: /');
+            exit;
+        }
         $this->render('login');
     }
 
