@@ -12,7 +12,7 @@ class AdminController extends BaseController
             $this->render('login');
             exit;
         }
-        $this->render('admin/dashboard', $_SESSION);
+        $this->render('admin', $_SESSION);
     }
 
     public function sendCommand()
@@ -50,6 +50,6 @@ class AdminController extends BaseController
     public function showPanel()
     {
         // TODO: Render admin panel view
-        include_once __DIR__ . '/../Views/admin/dashboard.php';
+        include_once __DIR__ . '/../Views/admin.php';
     }
 }

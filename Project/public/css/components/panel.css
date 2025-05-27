@@ -1,6 +1,6 @@
 .panel {
     background: rgba(40, 10, 40, 0.82);
-    border-radius: 18px;
+    border-radius: 15px;
     padding: 28px 24px 22px 24px;
     min-width: 260px;
     flex: 1 1 320px;
@@ -12,7 +12,7 @@
     transition: transform 0.18s, box-shadow 0.18s;
 }
 .panel:hover {
-    transform: translateY(-4px) scale(1.025);
+    transform: translateY(-2px) scale(1.002);
     box-shadow: 0 12px 36px rgba(160, 80, 255, 0.18), 0 4px 12px rgba(0,0,0,0.12);
 } 
 

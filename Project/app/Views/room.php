@@ -14,14 +14,14 @@ $responders = $responders ?? '-';
 ?>
 
 <main class="room-main" aria-label="Room View">
+    <section class="command-panel" aria-label="Current Command">
+        <div class="command-icon">🎬</div>
+        <p class="command-text"><?= $currentCommand ?></p>
+        <p class="countdown">⏱ <?= $countdown ?></p>
+        <p class="next-command">Next: <?= $nextCommand ?></p>
+    </section>
+    
     <section class="panels">
-        <section class="panel command-panel" aria-label="Current Command">
-            <div class="panel-icon">🎬</div>
-            <h2 class="panel-title">Current Command</h2>
-            <p class="command-text"><strong><?= $currentCommand ?></strong></p>
-            <p class="countdown">⏱ Countdown: <?= $countdown ?>...</p>
-            <p class="next-command">Next: <?= $nextCommand ?></p>
-        </section>
         <section class="panel user-panel" aria-label="Your Info">
             <div class="panel-icon">👤</div>
             <h2 class="panel-title">Your Info</h2>

@@ -3,11 +3,6 @@
 @import url('../components/form-fields.css');
 @import url('../components/link.css');
 
-.common-container select option {
-    color: rgb(253, 253, 253);
-    background-color: #c399c4;
-}
-
 .error,
 .errors {
     background: rgba(42, 18, 27, 0.5);

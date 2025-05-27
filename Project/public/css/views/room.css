@@ -1,4 +1,5 @@
 @import url('../components/panel.css');
+@import url('../components/command-panel.css');
 @import url('../components/btn-primary.css');
 @import url('../components/form-fields.css');
 @import url('../components/form-feedback.css');
@@ -41,7 +42,6 @@
     max-width: 900px;
 }
 
-
 .user-info-list,
 .audience-info-list {
     list-style: none;
@@ -53,14 +53,6 @@
 .user-info-list li,
 .audience-info-list li {
     margin-bottom: 7px;
-}
-
-.countdown {
-    font-size: 1.5em;
-    color: #ff6fa1;
-    font-weight: bold;
-    letter-spacing: 2px;
-    margin-bottom: 8px;
 }
 
 @media (max-width: 900px) {

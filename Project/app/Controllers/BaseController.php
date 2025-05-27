@@ -8,7 +8,8 @@ class BaseController
 
         ob_start();
         if (file_exists($viewFile)) {
-            $viewStyle = "/css/views/{$view}.css";
+            $viewName = str_contains($view, '/') ? substr($view, 0, strpos($view, '/')) : $view;
+            $viewStyle = "/css/views/{$viewName}.css";
             extract($data);
             require $viewFile;
         } else {
