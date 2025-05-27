@@ -8,17 +8,19 @@ $router->post('/login', 'LoginController@handleLogin');
 $router->get('/register', 'RegisterController@showForm');
 $router->post('/register', 'RegisterController@handleRegistration');
 
-// $router->get('/emotion', 'EmotionController@showInterface');
-// $router->post('/send-command', 'EmotionController@sendCommand');
+$router->get('/logout', 'LogoutController@logout');
 
-// // Add route for admin panel
-// $router->get('/admin', 'AdminController@showPanel');
+// Admin dashboard and command routes
+$router->get('/admin/dashboard', 'AdminController@index');
+$router->post('/admin/send-command', 'AdminController@sendCommand');
 
-// // Add route for sending reaction commands
-// $router->post('/reaction/send', 'ReactionController@sendCommand');
-// // Add route for simulating reactions
-// $router->post('/reaction/simulate', 'ReactionController@simulateReaction');
-// // Add route for event creation
-// $router->post('/event/create', 'EventController@createEvent');
-// // Add route for generating quick-join link
-// $router->get('/event/join-link/{eventId}', 'EventController@generateJoinLink');
+// Reaction routes
+$router->post('/reaction/send', 'ReactionController@sendCommand');
+$router->post('/reaction/simulate', 'ReactionController@simulateReaction');
+
+// Event routes
+$router->post('/event/create', 'EventController@createEvent');
+$router->get('/event/join-link/{eventId}', 'EventController@generateJoinLink');
+
+// Room view
+$router->get('/room', 'RoomController@showRoom');

@@ -1,52 +1,77 @@
-/* Room View Styles */
+@import url('../components/panel.css');
+@import url('../components/btn-primary.css');
+@import url('../components/form-fields.css');
+@import url('../components/form-feedback.css');
 
-.container {
-    padding: 32px 0;
-    max-width: 600px;
-    margin: 0 auto;
+.room-main {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 40px 0 24px 0;
 }
 
-.panel,
-.user-panel,
-.command-panel,
-.meter,
-.transfer-form {
-    background: rgba(255, 255, 255, 0.92);
-    border-radius: 12px;
-    padding: 24px 20px;
-    margin-bottom: 28px;
-    box-shadow: 0 4px 16px rgba(80, 0, 60, 0.08), 0 1.5px 4px rgba(0,0,0,0.04);
-    border: 1px solid #e5d6e8;
+.room-header {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.room-title {
+    font-family: 'Creepster', cursive, sans-serif;
+    font-size: 2.6em;
+    letter-spacing: 2px;
+    color: #f7eaff;
+    margin-bottom: 0.2em;
+}
+
+.room-subtitle {
+    font-size: 1.2em;
+    color: #e6a6e6;
+    margin-top: 0;
+    font-weight: 400;
+}
+
+.panels {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 28px;
+    justify-content: center;
+    width: 100%;
+    max-width: 900px;
+}
+
+
+.user-info-list,
+.audience-info-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 1em;
+}
+
+.user-info-list li,
+.audience-info-list li {
+    margin-bottom: 7px;
 }
 
 .countdown {
-    font-size: 2em;
-    color: #a11d1d;
+    font-size: 1.5em;
+    color: #ff6fa1;
     font-weight: bold;
     letter-spacing: 2px;
+    margin-bottom: 8px;
 }
 
-.transfer-form input[type="text"],
-.transfer-form input[type="number"] {
-    width: 100%;
-    padding: 8px 10px;
-    margin: 6px 0 12px 0;
-    border: 1px solid #c399c4;
-    border-radius: 5px;
-    background: #f8f3fa;
-}
+@media (max-width: 900px) {
+    .panels {
+        flex-direction: column;
+        align-items: center;
+        gap: 18px;
+    }
 
-.transfer-form button[type="submit"] {
-    background: #c399c4;
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    padding: 10px 18px;
-    font-size: 1em;
-    cursor: pointer;
-    transition: background 0.2s;
+    .panel {
+        min-width: 0;
+        width: 95%;
+    }
 }
-
-.transfer-form button[type="submit"]:hover {
-    background: #a16ca1;
-} 

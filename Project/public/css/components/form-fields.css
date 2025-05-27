@@ -1,0 +1,38 @@
+.form-fields form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.form-fields label {
+    display: block;
+    font-size: 1em;
+    color: #e6a6e6;
+    margin-top: 10px;
+    margin-left: 5px;
+    text-align: left;
+}
+
+.form-fields input[type="text"],
+.form-fields input[type="password"],
+.form-fields input[type="number"],
+.form-fields select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid #c399c4;
+    border-radius: 7px;
+    background: #3a1a3a;
+    color: #f7eaff;
+    font-size: 1em;
+    margin-bottom: 2px;
+    transition: border 0.18s, background 0.18s;
+}
+
+.form-fields input[type="text"]:focus,
+.form-fields input[type="password"]:focus,
+.form-fields input[type="number"]:focus,
+.form-fields select:focus {
+    border: 1.5px solid #ff6fa1;
+    background: #4a2a4a;
+    outline: none;
+}

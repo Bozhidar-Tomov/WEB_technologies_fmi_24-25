@@ -19,7 +19,11 @@ class LoginController extends BaseController
             'username' => $_POST['username'] ?? '',
             'password' => $_POST['password'] ?? ''
         ];
-        $errors = ValidationService::validateLogin($data);
+
+        // TODO: TESTMODE - uncomment this to perform validation
+        // $errors = ValidationService::validateLogin($data);
+        $errors = [];
+        
         $username = $data['username'];
         $password = $data['password'];
 
@@ -27,8 +31,23 @@ class LoginController extends BaseController
             try {
                 $user = User::findByUsername($username);
                 if ($user && password_verify($password, $user->password)) {
-                    $roomData = [
-                        'title' => 'Room View - Audience Control',
+                    if ($user->role === 'admin') {
+                        $_SESSION['user'] = [
+                            'title' => 'Admin Panel',
+                            'id' => (string) $user->id,
+                            'username' => htmlspecialchars($user->username),
+                            'role' => $user->role,
+                            'points' => $user->points,
+                            'groups' => $user->groups,
+                            'tags' => $user->tags,
+                            'gender' => $user->gender
+                        ];
+                        header('Location: /admin');
+                        exit;
+                    }
+                    
+                    $_SESSION['user'] = [
+                        'id' => (string) $user->id,
                         'username' => htmlspecialchars($user->username),
                         'role' => $user->role ?? '',
                         'points' => $user->points ?? 0,
@@ -36,8 +55,8 @@ class LoginController extends BaseController
                         'tags' => $user->tags ?? [],
                         'gender' => $user->gender ?? '',
                     ];
-                    $this->render('room', $roomData);
-                    return;
+                    header('Location: /room');
+                    exit;
                 } else {
                     $errors[] = 'Invalid username or password.';
                 }

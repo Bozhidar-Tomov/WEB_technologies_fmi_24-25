@@ -1,5 +1,4 @@
 <?php
-// Use provided data or sensible defaults from controller
 $username = $username ?? 'Guest';
 $points = $points ?? 0;
 $role = $role ?? 'Participant';
@@ -14,44 +13,49 @@ $audienceVolume = $audienceVolume ?? '-';
 $responders = $responders ?? '-';
 ?>
 
-<div class="container">
-
-    <!-- Command Panel -->
-    <div class="command-panel panel">
-        <div class="title">🎬 Current Command</div>
-        <p><strong><?= $currentCommand ?></strong></p>
-        <p class="countdown">⏱ Countdown: <?= $countdown ?>...</p>
-        <p>Next: <?= $nextCommand ?></p>
-    </div>
-
-    <!-- User Info Panel -->
-    <div class="user-panel panel">
-        <div class="title">👤 Your Info</div>
-        <p><strong>Name:</strong> <?= $username ?></p>
-        <p><strong>Points:</strong> <?= $points ?></p>
-        <p><strong>Role:</strong> <?= $role ?></p>
-        <p><strong>Group:</strong> <?= $group ?></p>
-        <p><strong>Reaction Accuracy:</strong> <?= $reactionAccuracy ?>%</p>
-        <p><strong>Leaderboard Rank:</strong> #<?= $leaderboardRank ?></p>
-    </div>
-
-    <!-- Audience Meter -->
-    <div class="meter panel">
-        <div class="title">📊 Audience Reaction</div>
-        <p>🔥 Intensity: <?= $audienceIntensity ?>%</p>
-        <p>🔊 Volume: <?= $audienceVolume ?></p>
-        <p>👥 Responders: <?= $responders ?></p>
-    </div>
-
-    <!-- Points Transfer -->
-    <div class="transfer-form panel">
-        <div class="title">💸 Transfer Points</div>
-        <form action="transfer_points.php" method="POST">
-            <label>Recipient Username:<br><input type="text" name="recipient" required></label><br><br>
-            <label>Points:<br><input type="number" name="amount" min="1" max="<?= $points ?>" required></label><br><br>
-            <label>Message (optional):<br><input type="text" name="message"></label><br><br>
-            <button type="submit">Send Points</button>
-        </form>
-    </div>
-
-</div>
+<main class="room-main" aria-label="Room View">
+    <section class="panels">
+        <section class="panel command-panel" aria-label="Current Command">
+            <div class="panel-icon">🎬</div>
+            <h2 class="panel-title">Current Command</h2>
+            <p class="command-text"><strong><?= $currentCommand ?></strong></p>
+            <p class="countdown">⏱ Countdown: <?= $countdown ?>...</p>
+            <p class="next-command">Next: <?= $nextCommand ?></p>
+        </section>
+        <section class="panel user-panel" aria-label="Your Info">
+            <div class="panel-icon">👤</div>
+            <h2 class="panel-title">Your Info</h2>
+            <ul class="user-info-list">
+                <li><strong>Name:</strong> <?= $username ?></li>
+                <li><strong>Points:</strong> <?= $points ?></li>
+                <li><strong>Role:</strong> <?= $role ?></li>
+                <li><strong>Group:</strong> <?= $group ?></li>
+                <li><strong>Reaction Accuracy:</strong> <?= $reactionAccuracy ?>%</li>
+                <li><strong>Leaderboard Rank:</strong> #<?= $leaderboardRank ?></li>
+            </ul>
+        </section>
+        <section class="panel meter" aria-label="Audience Reaction">
+            <div class="panel-icon">📊</div>
+            <h2 class="panel-title">Audience Reaction</h2>
+            <ul class="audience-info-list">
+                <li>🔥 Intensity: <?= $audienceIntensity ?>%</li>
+                <li>🔊 Volume: <?= $audienceVolume ?></li>
+                <li>👥 Responders: <?= $responders ?></li>
+            </ul>
+        </section>
+        <section class="panel" aria-label="Transfer Points">
+            <div class="panel-icon">💸</div>
+            <h2 class="panel-title">Transfer Points</h2>
+            <form class="form-fields" action="transfer_points.php" method="POST" autocomplete="off">
+                <label for="recipient">Recipient Username:</label>
+                <input type="text" id="recipient" name="recipient" required>
+                <label for="amount">Points:</label>
+                <input type="number" id="amount" name="amount" min="1" max="<?= $points ?>" required>
+                <label for="message">Message (optional):</label>
+                <input type="text" id="message" name="message">
+                <button class="btn btn-primary" type="submit">Send Points</button>
+                <div class="form-feedback" aria-live="polite"></div>
+            </form>
+        </section>
+    </section>
+</main>

@@ -15,10 +15,17 @@
 
 <body>
     <header>
-        <div class="site-title">
-            <h1>Crowd Pulse</h1>
-            <h2>Feel the beat of every emotion</h2>
-        </div>
+        <a class="site-title-link" href="/">
+            <div class="site-title">
+                <h1>Crowd Pulse</h1>
+                <h2>Feel the beat of every emotion</h2>
+            </div>
+        </a>
+        <?php if (isset($_SESSION['user'])): ?>
+            <form action="/logout" method="get" class="header-logout">
+                <button type="submit" class="btn btn-secondary">Logout</button>
+            </form>
+        <?php endif; ?>
     </header>
 
     <main>
@@ -26,10 +33,11 @@
     </main>
 
     <footer>
-        &copy; <?= date('Y') ?>
-        <span class="project-name">Crowd Pulse</span>
-        <span class="separator">|</span>
-        <span class="authors">Bozhidar Tomov, Mira Velikova</span>
+        <small>&copy; <?= date('Y') ?>
+            <span class="project-name">Crowd Pulse</span>
+            <span class="separator" aria-hidden="true">|</span>
+            <span class="authors">Bozhidar Tomov, Mira Velikova</span>
+        </small>
     </footer>
 </body>
 
