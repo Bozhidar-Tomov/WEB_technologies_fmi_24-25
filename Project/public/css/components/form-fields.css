@@ -47,6 +47,7 @@
     background: #3a1a3a;
     border: 1px solid #c399c4;
     margin: 10px 0;
+    position: relative;
 }
 
 .form-fields input[type="range"]::-webkit-slider-thumb {
@@ -59,6 +60,8 @@
     cursor: pointer;
     border: 1px solid #ff8fb3;
     box-shadow: 0 0 5px rgba(255, 111, 161, 0.5);
+    position: relative;
+    z-index: 2;
 }
 
 .form-fields input[type="range"]::before {
@@ -66,11 +69,12 @@
     position: absolute;
     height: 6px;
     left: 0;
-    top: 0;
+    top: 1px;
     background: #ff6fa1;
     border-radius: 3px 0 0 3px;
     pointer-events: none;
     width: var(--range-progress, 50%);
+    z-index: 1;
 }
 
 .slider-container {
@@ -78,4 +82,5 @@
     align-items: center;
     gap: 12px;
     margin-bottom: 16px;
+    position: relative;
 }

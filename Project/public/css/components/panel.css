@@ -16,11 +16,6 @@
     box-shadow: 0 12px 36px rgba(160, 80, 255, 0.18), 0 4px 12px rgba(0,0,0,0.12);
 } 
 
-.panel-icon {
-    font-size: 2em;
-    margin-bottom: 8px;
-    display: block;
-}
 .panel-title {
     font-size: 1.25em;
     color: #e6a6e6;

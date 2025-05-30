@@ -2,54 +2,63 @@
 
 require_once __DIR__ . '/BaseController.php';
 require_once __DIR__ . '/../Services/ValidationService.php';
+require_once __DIR__ . '/../Services/CommandService.php';
+
+use App\Services\CommandService;
 
 class AdminController extends BaseController
-{
+{   
+    private function isAdmin()
+    {
+        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+            $_SESSION['error'] = ['Unauthorized access'];
+            http_response_code(403);
+            header('Location: /');
+            exit;
+        }
+    }
+    
     public function index()
     {
-        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
-            header('Location: /login');
-            $this->render('login');
-            exit;
-        }
-        $this->render('admin', $_SESSION);
+        $this->isAdmin();
+        $this->render('admin', data: ['title' => 'Admin Panel', 'user' => $_SESSION]);
     }
-
-    public function sendCommand()
+    
+    public function broadcast()
     {
-        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
-            http_response_code(403);
-            echo json_encode(['error' => 'Unauthorized']);
+        $this->isAdmin();
+        $type = $_POST['type'] ?? '';
+        
+        if (empty($type)) {
+            $_SESSION['error'] = ['Command type is required'];
+            header('Location: /admin');
             exit;
         }
-
-        $command = [
-            'type' => $_POST['type'] ?? '',
+        
+        $commandData = [
+            'type' => $type,
             'intensity' => (int)($_POST['intensity'] ?? 50),
             'duration' => (int)($_POST['duration'] ?? 5),
-            'targetGroups' => isset($_POST['groups']) ? explode(',', $_POST['groups']) : [],
             'countdown' => (int)($_POST['countdown'] ?? 3),
-            'message' => $_POST['message'] ?? ''
+            'groups' => $_POST['groups'] ?? '',
+            'message' => $_POST['message'] ?? '',
+            'timestamp' => time()
         ];
-
-        // Validate command
-        if (empty($command['type'])) {
-            http_response_code(400);
-            echo json_encode(['error' => 'Command type is required']);
-            exit;
+        
+        try {
+            $success = (new CommandService())->broadcastCommand($commandData);
+            
+            if ($success) {
+                $_SESSION['success'] = ['Command broadcast successfully'];
+                $_SESSION['last_command'] = $commandData;
+            } else {
+                $_SESSION['error'] = ['Failed to broadcast command'];
+            }
+        } catch (Exception $e) {
+            $_SESSION['error'] = ['Error broadcasting command: ' . $e->getMessage()];
         }
-
-        // TODO: Implement WebSocket broadcast later
-        // For now, just return success
-        echo json_encode([
-            'success' => true,
-            'command' => $command
-        ]);
-    }
-
-    public function showPanel()
-    {
-        // TODO: Render admin panel view
-        include_once __DIR__ . '/../Views/admin.php';
+        
+        header('Location: /admin');
+        exit;
     }
 }

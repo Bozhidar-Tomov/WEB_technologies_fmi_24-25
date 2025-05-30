@@ -1,7 +1,7 @@
 <section class="common-container login form-fields" aria-label="Login">
-    <h1>Login</h1>
+    <h1><?= $title ?></h1>
     <?php if (!empty($errors)): ?>
-        <div class="error" role="alert">
+        <div class="status status-error" role="alert">
             <ul>
                 <?php foreach ($errors as $error): ?>
                     <li><?= htmlspecialchars($error) ?></li>

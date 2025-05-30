@@ -1,13 +1,23 @@
 <section class="common-container register form-fields" aria-label="Register">
-    <h1>Register</h1>
+    <h1><?= $title ?></h1>
 
     <?php if (!empty($errors)): ?>
-        <div class="errors" role="alert">
+        <div class="status status-error" role="alert">
             <ul>
                 <?php foreach ($errors as $error): ?>
                     <li><?= htmlspecialchars($error) ?></li>
                 <?php endforeach; ?>
             </ul>
+        </div>
+    <?php endif; ?>
+    <?php if (isset($_SESSION['error'])): ?>
+        <div class="status status-error" role="alert">
+            <ul>
+                <?php foreach ($_SESSION['error'] as $error): ?>
+                    <li><?= htmlspecialchars($error) ?></li>
+                <?php endforeach; ?>
+            </ul>
+            <?php unset($_SESSION['error']); ?>
         </div>
     <?php endif; ?>
 

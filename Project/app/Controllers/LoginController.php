@@ -10,68 +10,54 @@ class LoginController extends BaseController
 {
     public function showForm()
     {
-        if (isset($_SESSION['user'])) {
-            header('Location: /');
+        if (!empty($_SESSION['user'])) {
+            $_SESSION['warning'] = ['You are already logged in.'];
+            header('Location: /', true, 303);
             exit;
         }
-        $this->render('login');
+
+        $this->render('login', data: ['title' => 'Login']);
     }
 
     public function handleLogin()
     {
-        $data = [
-            'username' => $_POST['username'] ?? '',
-            'password' => $_POST['password'] ?? ''
-        ];
-
-        // TODO: TESTMODE - uncomment this to perform validation
-        // $errors = ValidationService::validateLogin($data);
+        $username = $_POST['username'] ?? '';
+        $password = $_POST['password'] ?? '';
         $errors = [];
-        
-        $username = $data['username'];
-        $password = $data['password'];
+
+        // TODO: Uncomment to enable validation
+        // $errors = ValidationService::validateLogin(['username' => $username, 'password' => $password]);
 
         if (empty($errors)) {
             try {
                 $user = User::findByUsername($username);
-                if ($user && password_verify($password, $user->password)) {
-                    if ($user->role === 'admin') {
-                        $_SESSION['user'] = [
-                            'title' => 'Admin Panel',
-                            'id' => (string) $user->id,
-                            'username' => htmlspecialchars($user->username),
-                            'role' => $user->role,
-                            'points' => $user->points,
-                            'groups' => $user->groups,
-                            'tags' => $user->tags,
-                            'gender' => $user->gender
-                        ];
-                        header('Location: /admin');
-                        exit;
-                    }
-                    
+
+                if (!$user) {
+                    $errors[] = 'Invalid username or password.';
+                } 
+                else if (password_verify($password, $user->password)) {
                     $_SESSION['user'] = [
                         'id' => (string) $user->id,
-                        'username' => htmlspecialchars($user->username),
+                        'username' => htmlspecialchars($user->username, ENT_QUOTES, 'UTF-8'),
                         'role' => $user->role ?? '',
                         'points' => $user->points ?? 0,
                         'groups' => $user->groups ?? [],
                         'tags' => $user->tags ?? [],
                         'gender' => $user->gender ?? '',
+                        'title' => $user->role === 'admin' ? 'Admin Panel' : 'Room View'
                     ];
-                    header('Location: /room');
+
+                    header('Location: ' . ($user->role === 'admin' ? '/admin' : '/room'));
                     exit;
-                } else {
+                }
+                else {
                     $errors[] = 'Invalid username or password.';
                 }
-            } catch (\Exception $e) {
+            } catch (Throwable $e) {
                 $errors[] = 'Database error: ' . $e->getMessage();
             }
         }
 
-        $this->render('login', [
-            'errors' => $errors,
-            'old' => ['username' => htmlspecialchars($username)]
-        ]);
+        $this->render('login', data: ['errors' => $errors, 'title' => 'Login']);
     }
 }

@@ -6,12 +6,13 @@ class RoomController extends BaseController
     public function showRoom()
     {
         if (!isset($_SESSION['user'])) {
-            header('Location: /login');
+            $_SESSION['error'] = ['You must be logged in to access this page.'];
+            header('Location: /');
             exit;
         }
         $user = $_SESSION['user'];
         $roomData = [
-            'title' => 'Room View - Audience Control',
+            'title' => 'Room View',
             'id' => $user['id'],
             'username' => htmlspecialchars($user['username']),
             'role' => $user['role'] ?? '',
