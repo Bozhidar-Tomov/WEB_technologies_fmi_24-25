@@ -1,17 +1,7 @@
 <?php
 
 namespace App\Models;
-
-if (!class_exists('MongoDB\\Driver\\Manager')) {
-    echo "MongoDB extension is not installed.";
-    exit;
-}
-
-use \MongoDB\Driver\Manager;
-use \MongoDB\Driver\BulkWrite;
-use \MongoDB\Driver\Query;
-use \MongoDB\BSON\ObjectId;
-use \MongoDB\BSON\UTCDateTime;
+require_once __DIR__ . '/../utils.php';
 
 class User
 {
@@ -21,69 +11,76 @@ class User
     public $groups = [];
     public $points = 0;
     public $gender;
-    public $arrivalTime;
     public $tags = [];
     public $password;
     public $created_at;
 
-    private static $collection = 'CrowdPulseDatabase.users';
+    private static $dataFile = __DIR__ . '/../../app/Database/users.json';
 
     public function save(): bool
     {
-        require __DIR__ . '/mongo_uri.php';
-        $manager = new Manager($uri);
-        $bulk = new BulkWrite();
-        $userDoc = [
+        $dataDir = dirname(self::$dataFile);
+        ensureDirectoryExists($dataDir);
+
+        $users = self::loadUsers();
+        
+        if (!$this->created_at) {
+            $this->created_at = date('Y-m-d H:i:s');
+        }
+
+        $userData = [
             'username' => $this->username,
             'role' => $this->role,
             'groups' => $this->groups,
             'points' => $this->points,
             'gender' => $this->gender,
-            'arrivalTime' => $this->arrivalTime,
             'tags' => $this->tags,
             'password' => $this->password,
-            'created_at' => $this->created_at ?: new UTCDateTime()
+            'created_at' => $this->created_at
         ];
 
         try {
-            if ($this->id) {
-                $bulk->update(['id' => new ObjectId($this->id)], ['$set' => $userDoc]);
-            } else {
-                $insertedId = $bulk->insert($userDoc);
-                $this->id = (string) $insertedId;
-            }
+            if(!$this->id) $this->id = uniqid();
 
-            $writeResult = $manager->executeBulkWrite(self::$collection, $bulk);
+            $users[$this->id] = $userData;
 
-            return $writeResult->getInsertedCount() > 0 || $writeResult->getModifiedCount() > 0;
-        } catch (\Exception $e) {
-            error_log("User save failed: " . $e->getMessage());
+            return self::saveUsers($users);
+        } catch (Exception $e) {
+            $_SESSION['error'] = "User save failed: " . $e->getMessage();
             return false;
         }
     }
 
     public static function findByUsername($username)
     {
-        require __DIR__ . '/mongo_uri.php';
-        $manager = new Manager($uri);
-        $filter = ['username' => $username];
-        $query = new Query($filter);
-        $cursor = $manager->executeQuery(self::$collection, $query);
-        $user = current($cursor->toArray());
+        $users = self::loadUsers();
 
-        if ($user) {
-            $u = new self();
-            $u->id = isset($user->_id) ? (string) $user->_id : null;
-            $u->username = $user->username;
-            $u->role = $user->role;
-            $u->groups = $user->groups;
-            $u->points = $user->points;
-            $u->gender = $user->gender;
-            $u->arrivalTime = $user->arrivalTime;
-            $u->tags = $user->tags;
-            $u->password = $user->password;
-            return $u;
+        foreach ($users as $id => $userData) {
+            if ($userData['username'] === $username) {
+                $user = new self();
+                $user->id = $id;
+                $user->username = $userData['username'];
+                $user->role = $userData['role'] ?? 'participant';
+                $user->groups = $userData['groups'] ?? [];
+                $user->points = $userData['points'] ?? 0;
+                $user->gender = $userData['gender'] ?? null;
+                $user->tags = $userData['tags'] ?? [];
+                $user->password = $userData['password'] ?? null;
+                $user->created_at = $userData['created_at'] ?? null;
+                return $user;
+            }
         }
+        
         return null;
     }
+    private static function loadUsers(): array
+    {
+        return readJsonFile(self::$dataFile) ?? [];
+    }
+
+    private static function saveUsers(array $users): bool
+    {
+        return saveJsonFile(self::$dataFile, $users);
+    }
+    
 }

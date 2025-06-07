@@ -12,15 +12,12 @@ $router->get('/logout', 'LogoutController@logout');
 
 // Admin dashboard and command routes
 $router->get('/admin', 'AdminController@index');
-$router->post('/admin/send-command', 'AdminController@sendCommand');
-
-// Reaction routes
-$router->post('/reaction/send', 'ReactionController@sendCommand');
-$router->post('/reaction/simulate', 'ReactionController@simulateReaction');
-
-// Event routes
-$router->post('/event/create', 'EventController@createEvent');
-$router->get('/event/join-link/{eventId}', 'EventController@generateJoinLink');
+$router->post('/admin/broadcast',  'AdminController@broadcast' );
 
 // Room view
 $router->get('/room', 'RoomController@showRoom');
+
+// SSE endpoint
+$router->get('/sse', function() {
+    require_once __DIR__ . '/../public/sse.php';
+});

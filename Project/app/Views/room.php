@@ -3,27 +3,23 @@ $username = $username ?? 'Guest';
 $points = $points ?? 0;
 $role = $role ?? 'Participant';
 $group = isset($groups) && is_array($groups) && count($groups) > 0 ? implode(', ', $groups) : 'General';
-$reactionAccuracy = $reactionAccuracy ?? 0; // Could be calculated elsewhere
-$leaderboardRank = $leaderboardRank ?? '-'; // Could be calculated elsewhere
-$currentCommand = $currentCommand ?? 'Awaiting next command...';
-$countdown = $countdown ?? '-';
-$nextCommand = $nextCommand ?? 'TBA';
-$audienceIntensity = $audienceIntensity ?? '-';
-$audienceVolume = $audienceVolume ?? '-';
-$responders = $responders ?? '-';
+$reactionAccuracy = $reactionAccuracy ?? 0;
+$currentCommand = 'Awaiting next command...';
+$countdown = '';
+$audienceIntensity = '';
+$audienceVolume = '';
+$responders = '';
 ?>
 
 <main class="room-main" aria-label="Room View">
     <section class="command-panel" aria-label="Current Command">
         <div class="command-icon">🎬</div>
-        <p class="command-text"><?= $currentCommand ?></p>
-        <p class="countdown">⏱ <?= $countdown ?></p>
-        <p class="next-command">Next: <?= $nextCommand ?></p>
+        <p class="command-text" id="commandText"><?= $currentCommand ?></p>
+        <p class="countdown" id="countdownDisplay"><?= $countdown ?></p>
     </section>
     
     <section class="panels">
         <section class="panel user-panel" aria-label="Your Info">
-            <div class="panel-icon">👤</div>
             <h2 class="panel-title">Your Info</h2>
             <ul class="user-info-list">
                 <li><strong>Name:</strong> <?= $username ?></li>
@@ -31,21 +27,18 @@ $responders = $responders ?? '-';
                 <li><strong>Role:</strong> <?= $role ?></li>
                 <li><strong>Group:</strong> <?= $group ?></li>
                 <li><strong>Reaction Accuracy:</strong> <?= $reactionAccuracy ?>%</li>
-                <li><strong>Leaderboard Rank:</strong> #<?= $leaderboardRank ?></li>
             </ul>
         </section>
         <section class="panel meter" aria-label="Audience Reaction">
-            <div class="panel-icon">📊</div>
             <h2 class="panel-title">Audience Reaction</h2>
             <ul class="audience-info-list">
-                <li>🔥 Intensity: <?= $audienceIntensity ?>%</li>
-                <li>🔊 Volume: <?= $audienceVolume ?></li>
-                <li>👥 Responders: <?= $responders ?></li>
+                <li>🔥 Intensity: <span id="audienceIntensity"><?= $audienceIntensity ?></span></li>
+                <li>🔊 Volume: <span id="audienceVolume"><?= $audienceVolume ?></span></li>
+                <li>👥 Responders: <span id="audienceResponders"><?= $responders ?></span></li>
             </ul>
         </section>
         <section class="panel" aria-label="Transfer Points">
-            <div class="panel-icon">💸</div>
-            <h2 class="panel-title">Transfer Points</h2>
+            <h2 class="panel-title">💸 Transfer Points</h2>
             <form class="form-fields" action="transfer_points.php" method="POST" autocomplete="off">
                 <label for="recipient">Recipient Username:</label>
                 <input type="text" id="recipient" name="recipient" required>
@@ -59,3 +52,8 @@ $responders = $responders ?? '-';
         </section>
     </section>
 </main>
+
+<script>
+    window.userId = "<?= $_SESSION['user']['id'] ?? '' ?>";
+</script>
+<script src="../js/room.js"></script>

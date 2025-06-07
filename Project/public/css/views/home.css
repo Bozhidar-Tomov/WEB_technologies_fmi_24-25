@@ -2,6 +2,7 @@
 @import url('../components/btn-primary.css');
 @import url('../components/btn-secondary.css');
 @import url('../components/link.css');
+@import url('../components/status-messages.css');
 
 .buttons {
     margin-bottom: 30px;
@@ -10,3 +11,8 @@
     gap: 30px;
     flex-wrap: wrap;
 }
+
+.common-container {
+    width: 25vw;
+}
+
