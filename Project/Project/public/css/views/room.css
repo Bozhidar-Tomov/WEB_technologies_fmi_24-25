@@ -1,0 +1,69 @@
+@import url('../components/panel.css');
+@import url('../components/command-panel.css');
+@import url('../components/btn-primary.css');
+@import url('../components/form-fields.css');
+@import url('../components/form-feedback.css');
+
+.room-main {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 40px 0 24px 0;
+}
+
+.room-header {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.room-title {
+    font-family: 'Creepster', cursive, sans-serif;
+    font-size: 2.6em;
+    letter-spacing: 2px;
+    color: #f7eaff;
+    margin-bottom: 0.2em;
+}
+
+.room-subtitle {
+    font-size: 1.2em;
+    color: #e6a6e6;
+    margin-top: 0;
+    font-weight: 400;
+}
+
+.panels {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 28px;
+    justify-content: center;
+    width: 100%;
+    max-width: 900px;
+}
+
+.user-info-list,
+.audience-info-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 1em;
+}
+
+.user-info-list li,
+.audience-info-list li {
+    margin-bottom: 7px;
+}
+
+@media (max-width: 900px) {
+    .panels {
+        flex-direction: column;
+        align-items: center;
+        gap: 18px;
+    }
+
+    .panel {
+        min-width: 0;
+        width: 95%;
+    }
+}
