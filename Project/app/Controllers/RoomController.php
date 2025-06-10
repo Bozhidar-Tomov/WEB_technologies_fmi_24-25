@@ -11,12 +11,16 @@ class RoomController extends BaseController
             exit;
         }
         $user = $_SESSION['user'];
+        // Load latest points from users.json
+        require_once __DIR__ . '/../Models/User.php';
+        $users = \App\Models\User::loadUsers();
+        $points = isset($users[$user['id']]) ? $users[$user['id']]['points'] : ($user['points'] ?? 0);
         $roomData = [
             'title' => 'Room View',
             'id' => $user['id'],
             'username' => htmlspecialchars($user['username']),
             'role' => $user['role'] ?? '',
-            'points' => $user['points'] ?? 0,
+            'points' => $points,
             'groups' => $user['groups'] ?? [],
             'tags' => $user['tags'] ?? [],
             'gender' => $user['gender'] ?? '',

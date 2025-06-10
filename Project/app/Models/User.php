@@ -17,6 +17,15 @@ class User
 
     private static $dataFile = __DIR__ . '/../../app/Database/users.json';
 
+    public function __construct($data = [])
+    {
+        foreach ($data as $key => $value) {
+            if (property_exists($this, $key)) {
+                $this->$key = $value;
+            }
+        }
+    }
+
     public function save(): bool
     {
         $dataDir = dirname(self::$dataFile);
@@ -73,7 +82,7 @@ class User
         
         return null;
     }
-    private static function loadUsers(): array
+    public static function loadUsers(): array
     {
         return readJsonFile(self::$dataFile) ?? [];
     }
@@ -83,4 +92,38 @@ class User
         return saveJsonFile(self::$dataFile, $users);
     }
     
+    public static function addPoints($userId, $pointsToAdd) {
+        $users = self::loadUsers();
+        if (isset($users[$userId])) {
+            $users[$userId]['points'] = ($users[$userId]['points'] ?? 0) + $pointsToAdd;
+            self::saveUsers($users);
+            return true;
+        }
+        return false;
+    }
+
+    public static function transferPoints($fromUserId, $toUsername, $amount) {
+        $users = self::loadUsers();
+        if (!isset($users[$fromUserId])) {
+            return ['success' => false, 'error' => 'Sender not found'];
+        }
+        $fromUser = $users[$fromUserId];
+        if (($fromUser['points'] ?? 0) < $amount) {
+            return ['success' => false, 'error' => 'Insufficient points'];
+        }
+        $toUserId = null;
+        foreach ($users as $uid => $u) {
+            if (isset($u['username']) && strtolower($u['username']) === strtolower($toUsername)) {
+                $toUserId = $uid;
+                break;
+            }
+        }
+        if (!$toUserId) {
+            return ['success' => false, 'error' => 'Recipient not found'];
+        }
+        $users[$fromUserId]['points'] -= $amount;
+        $users[$toUserId]['points'] = ($users[$toUserId]['points'] ?? 0) + $amount;
+        self::saveUsers($users);
+        return ['success' => true, 'points' => $users[$fromUserId]['points']];
+    }
 }
