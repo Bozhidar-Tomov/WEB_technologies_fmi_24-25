@@ -40,7 +40,6 @@
         <select name="role" id="role" required>
             <option value="participant">Active Participant</option>
             <option value="viewer">Passive Viewer</option>
-            <option value="leader">Group Leader</option>
         </select>
 
         <label for="tags">Tags (comma-separated, e.g. VIP,Guest,Fan):</label>

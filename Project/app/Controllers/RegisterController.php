@@ -45,6 +45,22 @@ class RegisterController extends BaseController
             return;
         }
 
+        // Group assignment logic
+        $groups = [];
+        // Add gender as a group
+        if (!empty($data['gender'])) {
+            $groups[] = $data['gender'];
+        }
+        // Add tags as groups
+        if (!empty($data['tags'])) {
+            $groups = array_merge($groups, array_filter(array_map('trim', explode(',', $data['tags']))));
+        }
+        // Assign to A, B, C, or D group in round-robin fashion
+        $allUsers = \App\Models\User::loadUsers();
+        $userCount = count($allUsers);
+        $groupNames = ['A', 'B', 'C', 'D'];
+        $groups[] = 'Group ' . $groupNames[$userCount % 4];
+
         $user = new User([
             'username' => $data['username'],
             'password' => password_hash($data['password'], PASSWORD_DEFAULT),
@@ -52,7 +68,7 @@ class RegisterController extends BaseController
             'role'     => $data['role'],
             'tags'     => array_filter(array_map('trim', explode(',', $data['tags']))),
             'points'   => 0,
-            'groups'   => []
+            'groups'   => $groups
         ]);
 
         if ($user->save()) {

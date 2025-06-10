@@ -24,6 +24,12 @@ header("Refresh: 10");
             ?>
 
             <h2 class="panel-title">Send Command</h2>
+            <div id="simAudienceControl" style="margin-bottom:1em; display: flex; align-items: center; gap: 1em;">
+                <button id="simAudienceBtn" type="button" class="btn btn-secondary">
+                    <span id="simAudienceBtnText"><?php echo file_exists(__DIR__ . '/../Database/sim_audience_on.flag') ? 'Disable' : 'Enable'; ?></span> Simulated Audience
+                </button>
+                <span id="simAudienceFeedback" style="color:#2b8a3e;"></span>
+            </div>
             <form id="commandForm" method="post" action="/admin/broadcast" class="form-fields">
                     <label for="commandType">Command Type:</label>
                     <select id="commandType" name="type" required>
@@ -35,13 +41,15 @@ header("Refresh: 10");
                         <option value="silence">Silence</option>
                     </select>
 
-
-                    <label for="intensity">Intensity (1-100):</label>
-                    <div class="slider-container">
-                        <input type="range" id="intensity" name="intensity" min="1" max="100" value="50">
-                        <span id="intensityValue">50</span>
+                    <?php if (file_exists(__DIR__ . '/../Database/sim_audience_on.flag')): ?>
+                    <div id="intensitySliderWrapper">
+                        <label for="intensity">Intensity (1-100):</label>
+                        <div class="slider-container">
+                            <input type="range" id="intensity" name="intensity" min="1" max="100" value="50">
+                            <span id="intensityValue">50</span>
+                        </div>
                     </div>
-
+                    <?php endif; ?>
 
                     <label for="duration">Duration (seconds):</label>
                     <input type="number" id="duration" name="duration" min="1" max="30" value="5">
@@ -104,11 +112,50 @@ header("Refresh: 10");
                 </div>
                 <div class="metric">
                     <label>Current Volume:</label>
-                    <span id="currentVolume">0 dB</span>
+                    <span id="currentVolume"><?php
+                        // Calculate average volume for current command
+                        $currentVolume = 0;
+                        $responseRate = 0;
+                        $numResponded = 0;
+                        $numActive = $activeUsers;
+                        $avgVolume = 0;
+                        $cmdId = null;
+                        $micResults = [];
+                        $resultsFile = __DIR__ . '/../Database/mic_results.json';
+                        $activeCmdFile = __DIR__ . '/../Database/commands/active_command.json';
+                        if (file_exists($activeCmdFile)) {
+                            $activeCmd = json_decode(file_get_contents($activeCmdFile), true);
+                            $cmdId = $activeCmd['id'] ?? null;
+                        }
+                        if ($cmdId && file_exists($resultsFile)) {
+                            $micResults = json_decode(file_get_contents($resultsFile), true) ?: [];
+                            $volumes = [];
+                            $responded = 0;
+                            foreach ($micResults as $result) {
+                                if (($result['commandId'] ?? null) === $cmdId) {
+                                    $volumes[] = $result['volume'] ?? 0;
+                                    if (($result['reactionAccuracy'] ?? 0) >= 15) {
+                                        $responded++;
+                                    }
+                                }
+                            }
+                            if (count($volumes) > 0) {
+                                $avgVolume = round(array_sum($volumes) / count($volumes));
+                            }
+                            $numResponded = $responded;
+                        }
+                        echo $avgVolume . ' dB';
+                    ?></span>
                 </div>
                 <div class="metric">
                     <label>Response Rate:</label>
-                    <span id="responseRate">0%</span>
+                    <span id="responseRate"><?php
+                        $rate = 0;
+                        if ($numActive > 0) {
+                            $rate = round(($numResponded / $numActive) * 100);
+                        }
+                        echo $rate . '%';
+                    ?></span>
                 </div>
             </div>
         </section>
