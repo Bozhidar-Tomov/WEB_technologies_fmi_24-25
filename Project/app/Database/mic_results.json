@@ -102,5 +102,29 @@
         "volume": 2,
         "reactionAccuracy": 100,
         "timestamp": 1749494917
+    },
+    "684700e76a972_cmd_68481a87b6d61": {
+        "userId": "684700e76a972",
+        "commandId": "cmd_68481a87b6d61",
+        "intensity": 0,
+        "volume": 0,
+        "reactionAccuracy": 0,
+        "timestamp": 1749555860
+    },
+    "684700e76a972_cmd_68481ab2f20ff": {
+        "userId": "684700e76a972",
+        "commandId": "cmd_68481ab2f20ff",
+        "intensity": 0,
+        "volume": 0,
+        "reactionAccuracy": 100,
+        "timestamp": 1749555897
+    },
+    "684700e76a972_cmd_68481aec36d39": {
+        "userId": "684700e76a972",
+        "commandId": "cmd_68481aec36d39",
+        "intensity": 0,
+        "volume": 0,
+        "reactionAccuracy": 0,
+        "timestamp": 1749555959
     }
 }
