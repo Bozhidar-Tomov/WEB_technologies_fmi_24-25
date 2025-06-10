@@ -1,0 +1,10 @@
+{
+    "type": "silence",
+    "intensity": 50,
+    "duration": 5,
+    "countdown": 3,
+    "groups": "",
+    "message": "",
+    "timestamp": 1749492138,
+    "id": "cmd_684721aa250d8"
+}
