@@ -11,13 +11,13 @@ $audienceVolume = '';
 $responders = '';
 ?>
 
-<main class="room-main" aria-label="Room View" style="position: relative;">
+<main class="room-main" aria-label="Room View">
     <div class="cue-controls-fixed" aria-label="Cue Controls">
         <button id="flashCueToggle" class="cue-btn" aria-label="Toggle Flash Cue" type="button" title="Flash Cue">
-            <span id="flashCueIcon" style="font-size: 1.5em;">⚡</span>
+            <span id="flashCueIcon">⚡</span>
         </button>
         <button id="beepCueToggle" class="cue-btn" aria-label="Toggle Beep Cue" type="button" title="Beep Cue">
-            <span id="beepCueIcon" style="font-size: 1.5em;">🔊</span>
+            <span id="beepCueIcon">🔊</span>
         </button>
     </div>
     <section class="command-panel" aria-label="Current Command">
@@ -49,7 +49,7 @@ $responders = '';
         </section>
         <section class="panel" aria-label="Transfer Points">
             <h2 class="panel-title">💸 Transfer Points</h2>
-            <form class="form-fields" action="transfer_points.php" method="POST" autocomplete="off">
+            <form class="form-fields" action="../api/transfer_points.php" method="POST" autocomplete="off">
                 <label for="recipient">Recipient Username:</label>
                 <input type="text" id="recipient" name="recipient" required>
                 <label for="amount">Points:</label>

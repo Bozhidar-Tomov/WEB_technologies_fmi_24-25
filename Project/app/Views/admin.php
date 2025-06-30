@@ -1,5 +1,23 @@
 <?php
 header("Refresh: 10");
+
+require_once __DIR__ . '/../Database/Database.php';
+use App\Database\Database;
+
+$db = Database::getInstance();
+
+// Check if simulated audience is enabled
+$simAudienceEnabled = false;
+try {
+    $stmt = $db->query(
+        "SELECT setting_value FROM settings WHERE setting_key = ?",
+        ['sim_audience_on']
+    );
+    $setting = $stmt->fetch(PDO::FETCH_ASSOC);
+    $simAudienceEnabled = $setting && $setting['setting_value'] === '1';
+} catch (PDOException $e) {
+    // Handle error silently
+}
 ?>
 <main class="admin-main">    
     <section class="panels">
@@ -26,11 +44,11 @@ header("Refresh: 10");
             <h2 class="panel-title">Send Command</h2>
             <div id="simAudienceControl" style="margin-bottom:1em; display: flex; align-items: center; gap: 1em;">
                 <button id="simAudienceBtn" type="button" class="btn btn-secondary">
-                    <span id="simAudienceBtnText"><?php echo file_exists(__DIR__ . '/../Database/sim_audience_on.flag') ? 'Disable' : 'Enable'; ?></span> Simulated Audience
+                    <span id="simAudienceBtnText"><?php echo $simAudienceEnabled ? 'Disable' : 'Enable'; ?></span> Simulated Audience
                 </button>
-                <span id="simAudienceFeedback" style="color:#2b8a3e;"></span>
             </div>
-            <form id="commandForm" method="post" action="/admin/broadcast" class="form-fields">
+            <span id="simAudienceFeedback" style="color:#2b8a3e;"></span>
+            <form id="commandForm" method="post" action="../admin/broadcast" class="form-fields">
                     <label for="commandType">Command Type:</label>
                     <select id="commandType" name="type" required>
                         <option value="applause">Applause</option>
@@ -41,7 +59,7 @@ header("Refresh: 10");
                         <option value="silence">Silence</option>
                     </select>
 
-                    <?php if (file_exists(__DIR__ . '/../Database/sim_audience_on.flag')): ?>
+                    <?php if ($simAudienceEnabled): ?>
                     <div id="intensitySliderWrapper">
                         <label for="intensity">Intensity (1-100):</label>
                         <div class="slider-container">
@@ -66,6 +84,7 @@ header("Refresh: 10");
                     <label for="message">Custom Message:</label>
                     <input type="text" id="message" name="message" placeholder="Optional instruction or message">
 
+                    <div id="commandFormFeedback" class="form-feedback"></div>
 
                 <button type="submit" class="btn btn-primary">Send Command</button>
             </form>
@@ -120,30 +139,40 @@ header("Refresh: 10");
                         $numActive = $activeUsers;
                         $avgVolume = 0;
                         $cmdId = null;
-                        $micResults = [];
-                        $resultsFile = __DIR__ . '/../Database/mic_results.json';
-                        $activeCmdFile = __DIR__ . '/../Database/commands/active_command.json';
-                        if (file_exists($activeCmdFile)) {
-                            $activeCmd = json_decode(file_get_contents($activeCmdFile), true);
+                        
+                        try {
+                            // Get active command ID
+                            $activeCmd = (new CommandService())->getActiveCommand();
                             $cmdId = $activeCmd['id'] ?? null;
-                        }
-                        if ($cmdId && file_exists($resultsFile)) {
-                            $micResults = json_decode(file_get_contents($resultsFile), true) ?: [];
-                            $volumes = [];
-                            $responded = 0;
-                            foreach ($micResults as $result) {
-                                if (($result['commandId'] ?? null) === $cmdId) {
+                            
+                            if ($cmdId) {
+                                // Get mic results for active command
+                                $stmt = $db->query(
+                                    "SELECT volume, reaction_accuracy FROM mic_results WHERE command_id = ?",
+                                    [$cmdId]
+                                );
+                                $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                                
+                                $volumes = [];
+                                $responded = 0;
+                                
+                                foreach ($results as $result) {
                                     $volumes[] = $result['volume'] ?? 0;
-                                    if (($result['reactionAccuracy'] ?? 0) >= 15) {
+                                    if (($result['reaction_accuracy'] ?? 0) >= 15) {
                                         $responded++;
                                     }
                                 }
+                                
+                                if (count($volumes) > 0) {
+                                    $avgVolume = round(array_sum($volumes) / count($volumes));
+                                }
+                                
+                                $numResponded = $responded;
                             }
-                            if (count($volumes) > 0) {
-                                $avgVolume = round(array_sum($volumes) / count($volumes));
-                            }
-                            $numResponded = $responded;
+                        } catch (PDOException $e) {
+                            // Handle error silently
                         }
+                        
                         echo $avgVolume . ' dB';
                     ?></span>
                 </div>

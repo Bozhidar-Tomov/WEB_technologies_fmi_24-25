@@ -20,23 +20,22 @@ README.md               # Project documentation
 app/
 ├── Components/         # Reusable UI elements (e.g. Blade emotion buttons)
 ├── Controllers/        # Handle HTTP requests (route entrypoints)
+├── Database/           # Database connection and management
 ├── Helpers/            # Common utility logic (formatters, validators)
-├── Models/             # Eloquent models (DB representations like User, Event)
-├── Services/           # App logic (EmotionMixer, PointTracker)
-├── Sockets/            # Real-time server logic (WebSocket broadcast handlers)
-└── Views/              # Blade views or templates shown to users
+├── Models/             # Models (DB representations like User, Command)
+├── Services/           # App logic (CommandService, ValidationService)
+└── Views/              # Views or templates shown to users
 
 config/
-└── broadcasting.php    # WebSocket + broadcasting config
-
-database/
-├── migrations/         # Create/modify database schema
-└── seeders/            # Seed sample data into DB
+├── database.php        # Database configuration
+├── schema.sql          # SQL schema for database setup
+├── init_db.php         # Database initialization script
 
 public/
 ├── index.php           # App entry point
 ├── css/                # CSS styles
 ├── js/                 # JavaScript (add socket clients here)
+├── api/                # API endpoints
 └── media/              # Audio/video assets for emotions
 
 routes/
@@ -45,6 +44,17 @@ routes/
 ```
 
 Apache server start point: `Project/public`
+
+## Database Setup
+
+The application now uses MySQL for data storage. Follow these steps to set up the database:
+
+1. Make sure you have XAMPP installed with MySQL service running
+2. Update database configuration in `config/database.php` if needed (default: localhost, root, no password)
+3. Run the database initialization script:
+   ```
+   php config/init_db.php
+   ```
 
 ## Features & Functional Overview
 
@@ -120,7 +130,7 @@ Commands follow this structure:
 
 ## How It Works
 
-- Admin commands are stored in a JSON file.
+- Admin commands are stored in the database.
 - Users' browsers connect to an SSE endpoint that streams commands in real-time.
 - Browsers without SSE support fall back to periodic polling.
 - No dependencies required: uses Server-Sent Events (SSE) instead of WebSockets.

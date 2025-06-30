@@ -2,94 +2,171 @@
 
 namespace App\Services;
 
-require_once __DIR__ . '/../utils.php';
+require_once __DIR__ . '/../Database/Database.php';
+
+use App\Database\Database;
+use PDO;
+use PDOException;
 
 class CommandService
 {
-    private $commandsDir;
-    private $commandHistoryDir;
-    private $acksDir;
-    private $activeUsersFile;
-
+    private $db;
+    
     public function __construct()
     {
-        $this->commandsDir = __DIR__ . '/../Database/commands';
-        $this->commandHistoryDir = "{$this->commandsDir}/command_history";
-        $this->acksDir = __DIR__ . '/../Database/acks';
-        $this->activeUsersFile = __DIR__ . '/../Database/active_users.json';
-
-        foreach ([$this->commandsDir, $this->commandHistoryDir, $this->acksDir, dirname($this->activeUsersFile)] as $dir) {
-            ensureDirectoryExists($dir);
-        }
+        $this->db = Database::getInstance();
     }
 
     public function broadcastCommand(array $commandData): bool
     {
-        $commandData['id'] ??= uniqid('cmd_');
-        $commandData['timestamp'] = time();
-
-        $activeCommandFile = "{$this->commandsDir}/active_command.json";
-        $historyFile = "{$this->commandHistoryDir}/{$commandData['id']}.json";
-
-        return saveJsonFile($activeCommandFile, $commandData) &&
-               saveJsonFile($historyFile, $commandData);
+        try {
+            $this->db->beginTransaction();
+            
+            $commandData['id'] ??= uniqid('cmd_');
+            $commandData['timestamp'] = time();
+            
+            // Reset all active commands
+            $this->db->query("UPDATE commands SET is_active = 0");
+            
+            // Insert the new command
+            $this->db->query(
+                "INSERT INTO commands (id, command_type, command_data, is_active, timestamp) 
+                 VALUES (?, ?, ?, ?, ?)",
+                [
+                    $commandData['id'],
+                    $commandData['type'] ?? '',
+                    json_encode($commandData),
+                    true,
+                    $commandData['timestamp']
+                ]
+            );
+            
+            $this->db->commit();
+            return true;
+        } catch (PDOException $e) {
+            $this->db->rollback();
+            return false;
+        }
     }
-
 
     public function getActiveCommand(): ?array
     {
-        return readJsonFile("{$this->commandsDir}/active_command.json");
+        try {
+            $stmt = $this->db->query(
+                "SELECT command_data FROM commands WHERE is_active = 1 ORDER BY timestamp DESC LIMIT 1"
+            );
+            
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($result && isset($result['command_data'])) {
+                return json_decode($result['command_data'], true);
+            }
+            
+            return null;
+        } catch (PDOException $e) {
+            return null;
+        }
     }
 
     public function registerActiveUser(string $userId): bool
     {
         $this->cleanupInactiveUsers();
-
-        $users = $this->getActiveUsers();
-        $users[$userId] = [
-            'lastSeen'   => time(),
-            'userAgent'  => $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown'
-        ];
-
-        return saveJsonFile($this->activeUsersFile, $users);
+        
+        try {
+            $stmt = $this->db->query(
+                "SELECT user_id FROM active_users WHERE user_id = ?",
+                [$userId]
+            );
+            
+            if ($stmt->rowCount() > 0) {
+                // Update existing active user
+                $this->db->query(
+                    "UPDATE active_users SET last_seen = ?, user_agent = ? WHERE user_id = ?",
+                    [
+                        time(),
+                        $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown',
+                        $userId
+                    ]
+                );
+            } else {
+                // Insert new active user
+                $this->db->query(
+                    "INSERT INTO active_users (user_id, last_seen, user_agent) VALUES (?, ?, ?)",
+                    [
+                        $userId,
+                        time(),
+                        $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown'
+                    ]
+                );
+            }
+            
+            return true;
+        } catch (PDOException $e) {
+            return false;
+        }
     }
 
     public function removeActiveUser(string $userId): bool
     {
-        $users = $this->getActiveUsers();
-        if (!isset($users[$userId])) return true;
-
-        unset($users[$userId]);
-        return saveJsonFile($this->activeUsersFile, $users);
+        try {
+            $this->db->query(
+                "DELETE FROM active_users WHERE user_id = ?",
+                [$userId]
+            );
+            
+            return true;
+        } catch (PDOException $e) {
+            return false;
+        }
     }
 
     public function getActiveUsers(): array
     {
-        return readJsonFile($this->activeUsersFile) ?? [];
+        $users = [];
+        
+        try {
+            $stmt = $this->db->query("SELECT * FROM active_users");
+            $activeUsers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            foreach ($activeUsers as $user) {
+                $users[$user['user_id']] = [
+                    'lastSeen' => $user['last_seen'],
+                    'userAgent' => $user['user_agent']
+                ];
+            }
+            
+            return $users;
+        } catch (PDOException $e) {
+            return [];
+        }
     }
 
     public function getActiveUserCount(): int
     {
         $this->cleanupInactiveUsers();
-        return count($this->getActiveUsers());
+        
+        try {
+            $stmt = $this->db->query("SELECT COUNT(*) as count FROM active_users");
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            return (int)($result['count'] ?? 0);
+        } catch (PDOException $e) {
+            return 0;
+        }
     }
 
     private function cleanupInactiveUsers(): void
     {
-        $users = $this->getActiveUsers();
-        $now = time();
-        $timeout = 60;
-        $updated = false;
-
-        foreach ($users as $userId => $data) {
-            if ($now - ($data['lastSeen'] ?? 0) > $timeout) {
-                unset($users[$userId]);
-                $updated = true;
-            }
-        }
-
-        if ($updated) {
-            saveJsonFile($this->activeUsersFile, $users);
+        try {
+            $timeout = 60;
+            $cutoff = time() - $timeout;
+            
+            $this->db->query(
+                "DELETE FROM active_users WHERE last_seen < ?",
+                [$cutoff]
+            );
+        } catch (PDOException $e) {
+            // Silently fail
         }
     }
 }

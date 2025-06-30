@@ -2,7 +2,10 @@
 header('Content-Type: application/json');
 
 require_once __DIR__ . '/../../app/Models/User.php';
+require_once __DIR__ . '/../../app/Database/Database.php';
+
 use App\Models\User;
+use App\Database\Database;
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -22,37 +25,47 @@ if (!$fromUserId || !$toUsername || $amount <= 0) {
     exit;
 }
 
-$users = User::loadUsers();
-if (!isset($users[$fromUserId])) {
-    http_response_code(404);
-    echo json_encode(['success' => false, 'error' => 'Sender not found']);
-    exit;
-}
-$fromUser = $users[$fromUserId];
-if (($fromUser['points'] ?? 0) < $amount) {
-    http_response_code(400);
-    echo json_encode(['success' => false, 'error' => 'Insufficient points']);
-    exit;
-}
-// Find recipient by username
-$toUserId = null;
-foreach ($users as $uid => $u) {
-    if (isset($u['username']) && strtolower($u['username']) === strtolower($toUsername)) {
-        $toUserId = $uid;
-        break;
+$db = Database::getInstance();
+
+try {
+    // Check if sender exists and has enough points
+    $stmt = $db->query(
+        "SELECT id, points FROM users WHERE id = ?",
+        [$fromUserId]
+    );
+    $sender = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$sender) {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'error' => 'Sender not found']);
+        exit;
     }
-}
-if (!$toUserId) {
-    http_response_code(404);
-    echo json_encode(['success' => false, 'error' => 'Recipient not found']);
+    
+    if ($sender['points'] < $amount) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'Insufficient points']);
+        exit;
+    }
+    
+    // Find recipient by username
+    $stmt = $db->query(
+        "SELECT id FROM users WHERE LOWER(username) = LOWER(?)",
+        [$toUsername]
+    );
+    $recipient = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$recipient) {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'error' => 'Recipient not found']);
+        exit;
+    }
+    
+    // Transfer points
+    $result = User::transferPoints($fromUserId, $toUsername, $amount);
+    
+    echo json_encode($result);
+} catch (PDOException $e) {
+    http_response_code(500);
+    echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
     exit;
-}
-// Transfer points
-$result = User::transferPoints($fromUserId, $toUsername, $amount);
-// Optionally log the transfer
-if ($result['success']) {
-    $logFile = __DIR__ . '/../../app/Database/point_transfers.log';
-    $logEntry = date('c') . " | from: $fromUserId | to: $toUsername | amount: $amount | message: $message\n";
-    file_put_contents($logFile, $logEntry, FILE_APPEND);
-}
-echo json_encode($result); 
+} 

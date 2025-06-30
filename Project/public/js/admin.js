@@ -18,6 +18,11 @@ if (intensitySlider) {
 
 document.getElementById('commandForm').addEventListener('submit', function(e) {
     const submitButton = this.querySelector('button[type="submit"]');
+    const feedbackElement = document.getElementById('commandFormFeedback');
+    
+    feedbackElement.textContent = 'Sending command...';
+    feedbackElement.style.color = '#2b8a3e';
+    
     submitButton.disabled = true;
     submitButton.textContent = 'Sending...';
 });
@@ -27,7 +32,7 @@ function updateSimAudienceBtnAndSlider() {
   const simBtnText = document.getElementById('simAudienceBtnText');
   const sliderWrapper = document.getElementById('intensitySliderWrapper');
   if (!simBtn || !simBtnText) return;
-  fetch('/api/toggle_sim_audience.php', { method: 'GET' })
+  fetch('../api/toggle_sim_audience.php', { method: 'GET' })
     .then(r => r.json())
     .then(resp => {
       if (resp.success) {
@@ -47,7 +52,7 @@ document.addEventListener('DOMContentLoaded', function () {
     simBtn.addEventListener('click', function () {
       simFeedback.textContent = '';
       const enable = simBtnText.textContent.trim().toLowerCase() === 'enable';
-      fetch('/api/toggle_sim_audience.php', {
+      fetch('../api/toggle_sim_audience.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: enable ? 'sim_audience=on' : ''

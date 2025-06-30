@@ -24,7 +24,7 @@ function connectSSE() {
     evtSource.close();
   }
 
-  evtSource = new EventSource("/sse");
+  evtSource = new EventSource("../sse");
 
   evtSource.onopen = function () {
     console.log("SSE connection established");
@@ -392,7 +392,7 @@ async function analyzeAudioBlob(blob, sampleRate, commandType) {
 }
 
 function sendMicResults(results) {
-  fetch('/api/mic_results.php', {
+  fetch('../api/mic_results.php', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -443,7 +443,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
       }
       transferForm.querySelector('button[type="submit"]').disabled = true;
-      fetch('/api/transfer_points.php', {
+      fetch('../api/transfer_points.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

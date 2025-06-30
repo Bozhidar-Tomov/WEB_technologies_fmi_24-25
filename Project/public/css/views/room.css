@@ -11,6 +11,7 @@
     align-items: center;
     justify-content: flex-start;
     padding: 40px 0 24px 0;
+    position: relative;
 }
 
 .room-header {
@@ -31,6 +32,35 @@
     color: #e6a6e6;
     margin-top: 0;
     font-weight: 400;
+}
+
+.cue-controls-fixed {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    gap: 10px;
+    z-index: 1000;
+}
+
+.cue-btn {
+    background: rgba(255, 255, 255, 0.95);
+    border: none;
+    border-radius: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.2s ease;
+}
+
+.cue-btn:hover {
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.12);
+}
+
+.cue-btn span {
+    font-size: 1.5em;
+    display: block;
 }
 
 .panels {

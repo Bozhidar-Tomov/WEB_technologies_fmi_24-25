@@ -17,16 +17,14 @@
     <div class="buttons">
         <?php if (isset($_SESSION['user'])): ?>
             <?php if (isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'admin'): ?>
-                <a href="/admin" class="btn btn-primary">Admin Panel</a>
-                <a href="/room" class="btn btn-secondary">Go to Room</a>
+                <a href="../admin" class="btn btn-primary">Admin Panel</a>
+                <a href="../room" class="btn btn-secondary">Go to Room</a>
                 <?php else: ?>
-                <a href="/room" class="btn btn-primary">Go to Room</a>
+                <a href="../room" class="btn btn-primary">Go to Room</a>
             <?php endif; ?>
         <?php else: ?>
-            <a href="/login" class="btn btn-primary">Login</a>
-            <a href="/register" class="btn btn-secondary">Register</a>
+            <a href="../login" class="btn btn-primary">Login</a>
+            <a href="../register" class="btn btn-secondary">Register</a>
         <?php endif; ?>
     </div>
-
-    <p><a href="/emotion" class="link">🎬 Try the Emotion Director</a></p>
 </div>

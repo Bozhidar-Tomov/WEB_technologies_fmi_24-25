@@ -2,7 +2,10 @@
 header('Content-Type: application/json');
 
 require_once __DIR__ . '/../../app/Models/User.php';
+require_once __DIR__ . '/../../app/Database/Database.php';
+
 use App\Models\User;
+use App\Database\Database;
 
 function log_mic_error($msg, $data = null) {
     $logFile = __DIR__ . '/../../app/Database/mic_results_errors.log';
@@ -35,58 +38,100 @@ if (!$data || count($missing) > 0) {
     exit;
 }
 
-$resultsFile = __DIR__ . '/../../app/Database/mic_results.json';
-if (!is_dir(dirname($resultsFile))) {
-    mkdir(dirname($resultsFile), 0777, true);
+$db = Database::getInstance();
+
+try {
+    // Check if result already exists
+    $stmt = $db->query(
+        "SELECT id FROM mic_results WHERE user_id = ? AND command_id = ?",
+        [$data['userId'], $data['commandId']]
+    );
+    
+    if ($stmt->rowCount() > 0) {
+        // Update existing result
+        $db->query(
+            "UPDATE mic_results SET intensity = ?, volume = ?, reaction_accuracy = ?, timestamp = ? 
+             WHERE user_id = ? AND command_id = ?",
+            [
+                $data['intensity'],
+                $data['volume'],
+                $data['reactionAccuracy'],
+                time(),
+                $data['userId'],
+                $data['commandId']
+            ]
+        );
+    } else {
+        // Insert new result
+        $db->query(
+            "INSERT INTO mic_results (user_id, command_id, intensity, volume, reaction_accuracy, timestamp) 
+             VALUES (?, ?, ?, ?, ?, ?)",
+            [
+                $data['userId'],
+                $data['commandId'],
+                $data['intensity'],
+                $data['volume'],
+                $data['reactionAccuracy'],
+                time()
+            ]
+        );
+    }
+} catch (PDOException $e) {
+    http_response_code(500);
+    log_mic_error('Database error: ' . $e->getMessage(), $data);
+    echo json_encode(['success' => false, 'error' => 'Database error']);
+    exit;
 }
-
-$results = [];
-if (file_exists($resultsFile)) {
-    $json = file_get_contents($resultsFile);
-    $results = json_decode($json, true) ?: [];
-}
-
-$key = $data['userId'] . '_' . $data['commandId'];
-$results[$key] = [
-    'userId' => $data['userId'],
-    'commandId' => $data['commandId'],
-    'intensity' => $data['intensity'],
-    'volume' => $data['volume'],
-    'reactionAccuracy' => $data['reactionAccuracy'],
-    'timestamp' => time()
-];
-
-file_put_contents($resultsFile, json_encode($results, JSON_PRETTY_PRINT));
 
 // Award points
 $basePoints = 5;
 $accuracyBonus = round($data['reactionAccuracy'] * 0.5); // up to 50
 // Get target intensity from active command
-$activeCmdFile = __DIR__ . '/../../app/Database/commands/active_command.json';
 $intensityBonus = 0;
-$simAudienceFlag = __DIR__ . '/../../app/Database/sim_audience_on.flag';
-if (file_exists($activeCmdFile)) {
-    $activeCmd = json_decode(file_get_contents($activeCmdFile), true);
-    $targetIntensity = isset($activeCmd['intensity']) ? (int)$activeCmd['intensity'] : 0;
-    $userIntensity = isset($data['intensity']) ? (int)$data['intensity'] : 0;
-    $diff = abs($userIntensity - $targetIntensity);
-    // More forgiving: within 10 gets most points, falls off gently
-    $intensityBonus = max(0, 45 - round(($diff / 100) * 45 * 1.5));
-}
-if (file_exists($simAudienceFlag)) {
-    $totalPoints = $basePoints + $accuracyBonus + $intensityBonus;
-} else {
-    $totalPoints = $basePoints + $accuracyBonus;
-}
 
-// Add points to user
-User::addPoints($data['userId'], $totalPoints);
-
-// Get new points value
-$newPoints = 0;
-$users = User::loadUsers();
-if (isset($users[$data['userId']])) {
-    $newPoints = $users[$data['userId']]['points'];
-}
-
-echo json_encode(['success' => true, 'points' => $newPoints]); 
+try {
+    // Get active command
+    $stmt = $db->query(
+        "SELECT command_data FROM commands WHERE is_active = 1 ORDER BY timestamp DESC LIMIT 1"
+    );
+    $activeCmd = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if ($activeCmd && isset($activeCmd['command_data'])) {
+        $activeCmd = json_decode($activeCmd['command_data'], true);
+        $targetIntensity = isset($activeCmd['intensity']) ? (int)$activeCmd['intensity'] : 0;
+        $userIntensity = isset($data['intensity']) ? (int)$data['intensity'] : 0;
+        $diff = abs($userIntensity - $targetIntensity);
+        // More forgiving: within 10 gets most points, falls off gently
+        $intensityBonus = max(0, 45 - round(($diff / 100) * 45 * 1.5));
+    }
+    
+    // Check if simulated audience is on
+    $stmt = $db->query(
+        "SELECT setting_value FROM settings WHERE setting_key = 'sim_audience_on'"
+    );
+    $simAudienceSetting = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if ($simAudienceSetting && $simAudienceSetting['setting_value'] === '1') {
+        $totalPoints = $basePoints + $accuracyBonus + $intensityBonus;
+    } else {
+        $totalPoints = $basePoints + $accuracyBonus;
+    }
+    
+    // Add points to user
+    User::addPoints($data['userId'], $totalPoints);
+    
+    // Get new points value
+    $stmt = $db->query(
+        "SELECT points FROM users WHERE id = ?",
+        [$data['userId']]
+    );
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    $newPoints = $user ? (int)$user['points'] : 0;
+    
+    echo json_encode(['success' => true, 'points' => $newPoints]);
+} catch (PDOException $e) {
+    http_response_code(500);
+    log_mic_error('Database error: ' . $e->getMessage(), $data);
+    echo json_encode(['success' => false, 'error' => 'Database error']);
+    exit;
+} 
