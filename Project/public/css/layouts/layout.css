@@ -32,16 +32,18 @@ header .site-title {
     font-family: 'Metal Mania', cursive !important;
     text-align: center;
     padding: 15px 30px;
+    font-display: swap;
 }
 
-
-
 header .site-title h1 {
+    font-family: 'Metal Mania', cursive !important;
     font-size: 3.5rem;
     letter-spacing: 12px;
+    margin: 0;
 }
 
 header .site-title h2 {
+    font-family: 'Metal Mania', cursive !important;
     color: rgb(203, 153, 196);
     font-size: 2rem;
     margin-top: 0;

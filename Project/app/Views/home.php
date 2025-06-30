@@ -27,6 +27,4 @@
             <a href="/register" class="btn btn-secondary">Register</a>
         <?php endif; ?>
     </div>
-
-    <p><a href="/emotion" class="link">🎬 Try the Emotion Director</a></p>
 </div>

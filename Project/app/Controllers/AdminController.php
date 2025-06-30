@@ -36,6 +36,7 @@ class AdminController extends BaseController
         }
         
         $commandData = [
+            'id' => uniqid('cmd_'),
             'type' => $type,
             'intensity' => (int)($_POST['intensity'] ?? 50),
             'duration' => (int)($_POST['duration'] ?? 5),
@@ -46,16 +47,19 @@ class AdminController extends BaseController
         ];
         
         try {
-            $success = (new CommandService())->broadcastCommand($commandData);
+            $commandService = new CommandService();
+            $success = $commandService->broadcastCommand($commandData);
             
             if ($success) {
                 $_SESSION['success'] = ['Command broadcast successfully'];
                 $_SESSION['last_command'] = $commandData;
             } else {
                 $_SESSION['error'] = ['Failed to broadcast command'];
+                error_log("AdminController: Failed to broadcast command: " . json_encode($commandData));
             }
         } catch (Exception $e) {
             $_SESSION['error'] = ['Error broadcasting command: ' . $e->getMessage()];
+            error_log("AdminController Exception: " . $e->getMessage());
         }
         
         header('Location: /admin');

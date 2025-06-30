@@ -1,0 +1,13 @@
+RewriteEngine On
+
+# Prevent rewriting for existing files and folders
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Bypass rewrite for SSE endpoint explicitly (optional but safe)
+RewriteCond %{REQUEST_URI} ^/sse\.php$ [NC]
+RewriteRule ^ - [L]
+
+# Send all other requests to index.php
+RewriteRule ^ index.php?path=$1 [QSA,L]

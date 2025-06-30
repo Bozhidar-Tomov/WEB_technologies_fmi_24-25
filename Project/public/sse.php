@@ -44,7 +44,15 @@ $endTime = time() + (30 * 60);
 while (time() < $endTime) {
     // Update active status every 15 seconds
     if (time() - $lastActiveUpdateTime >= 15) {
-        $commandService->registerActiveUser($userId);
+        // Ensure user still exists before registering them as active
+        $success = $commandService->registerActiveUser($userId);
+        if (!$success) {
+            // If user registration fails, exit the loop and terminate the connection
+            echo "event: error\n";
+            echo "data: {\"message\": \"User session invalid\"}\n\n";
+            flush();
+            break;
+        }
         $lastActiveUpdateTime = time();
     }
     
@@ -78,28 +86,49 @@ $commandService->removeActiveUser($userId);
 
 
 function checkForNewCommands($commandService, $userId) {
-    // Get the active command using the CommandService
-    $command = $commandService->getActiveCommand();
-    
-    if (!$command) {
+    try {
+        // Get the active command using the CommandService
+        $command = $commandService->getActiveCommand();
+        
+        if (!$command || !is_array($command)) {
+            return null;
+        }
+        
+        // Check if this is a new command the user hasn't seen
+        $commandId = $command['id'] ?? '';
+        if (empty($commandId)) {
+            error_log("Active command missing ID");
+            return null;
+        }
+        
+        // Ensure all required fields exist
+        $required = ['type', 'intensity', 'timestamp'];
+        foreach ($required as $field) {
+            if (!isset($command[$field])) {
+                error_log("Active command missing required field: $field");
+                return null;
+            }
+        }
+        
+        // Format command data for frontend
+        $command['duration'] = $command['duration'] ?? 5;
+        $command['countdown'] = $command['countdown'] ?? 3;
+        $command['message'] = $command['message'] ?? '';
+        $command['groups'] = $command['groups'] ?? '';
+        
+        // Check if the command has expired
+        $timestamp = (int)$command['timestamp'];
+        $duration = (int)$command['duration'];
+        $currentTime = time();
+        
+        if ($duration > 0 && $currentTime > ($timestamp + $duration + 10)) {
+            // Command has expired (with 10s buffer), don't show it
+            return null;
+        }
+        
+        return $command;
+    } catch (\Exception $e) {
+        error_log("Error in checkForNewCommands: " . $e->getMessage());
         return null;
     }
-    
-    // Check if this is a new command the user hasn't seen
-    $commandId = $command['id'] ?? '';
-    if (empty($commandId)) {
-        return null;
-    }
-    
-    // Check if the command has expired based on its timestamp and duration
-    $timestamp = $command['timestamp'] ?? 0;
-    $duration = $command['duration'] ?? 0;
-    $currentTime = time();
-    
-    if ($duration > 0 && $currentTime > ($timestamp + $duration)) {
-        // Command has expired, don't show it
-        return null;
-    }
-    
-    return $command;
 } 

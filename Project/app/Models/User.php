@@ -2,6 +2,7 @@
 
 namespace App\Models;
 require_once __DIR__ . '/../utils.php';
+require_once __DIR__ . '/../Database/Database.php';
 
 class User
 {
@@ -15,7 +16,7 @@ class User
     public $password;
     public $created_at;
 
-    private static $dataFile = __DIR__ . '/../../app/Database/users.json';
+    private static string $table = 'users';
 
     public function __construct($data = [])
     {
@@ -28,102 +29,131 @@ class User
 
     public function save(): bool
     {
-        $dataDir = dirname(self::$dataFile);
-        ensureDirectoryExists($dataDir);
+        $pdo = \App\Database::getConnection();
 
-        $users = self::loadUsers();
-        
-        if (!$this->created_at) {
-            $this->created_at = date('Y-m-d H:i:s');
+        // Encode complex fields as JSON
+        $groupsJson = json_encode($this->groups, JSON_UNESCAPED_UNICODE);
+        $tagsJson   = json_encode($this->tags, JSON_UNESCAPED_UNICODE);
+
+        // Insert or update
+        if ($this->id) {
+            $stmt = $pdo->prepare("UPDATE `" . self::$table . "` SET username = :username, role = :role, `groups` = :groups, points = :points, gender = :gender, tags = :tags, password = :password WHERE id = :id");
+            return $stmt->execute([
+                ':username' => $this->username,
+                ':role'     => $this->role,
+                ':groups'   => $groupsJson,
+                ':points'   => $this->points,
+                ':gender'   => $this->gender,
+                ':tags'     => $tagsJson,
+                ':password' => $this->password,
+                ':id'       => $this->id,
+            ]);
         }
 
-        $userData = [
-            'username' => $this->username,
-            'role' => $this->role,
-            'groups' => $this->groups,
-            'points' => $this->points,
-            'gender' => $this->gender,
-            'tags' => $this->tags,
-            'password' => $this->password,
-            'created_at' => $this->created_at
-        ];
+        $stmt = $pdo->prepare("INSERT INTO `" . self::$table . "` (username, role, `groups`, points, gender, tags, password, created_at) VALUES (:username, :role, :groups, :points, :gender, :tags, :password, NOW())");
+        $success = $stmt->execute([
+            ':username' => $this->username,
+            ':role'     => $this->role,
+            ':groups'   => $groupsJson,
+            ':points'   => $this->points,
+            ':gender'   => $this->gender,
+            ':tags'     => $tagsJson,
+            ':password' => $this->password,
+        ]);
 
-        try {
-            if(!$this->id) $this->id = uniqid();
-
-            $users[$this->id] = $userData;
-
-            return self::saveUsers($users);
-        } catch (Exception $e) {
-            $_SESSION['error'] = "User save failed: " . $e->getMessage();
-            return false;
+        if ($success) {
+            $this->id = $pdo->lastInsertId();
         }
+        return $success;
     }
 
-    public static function findByUsername($username)
+    public static function findByUsername($username): ?self
     {
-        $users = self::loadUsers();
+        $pdo = \App\Database::getConnection();
+        $stmt = $pdo->prepare("SELECT * FROM `" . self::$table . "` WHERE username = :username LIMIT 1");
+        $stmt->execute([':username' => $username]);
+        $row = $stmt->fetch();
 
-        foreach ($users as $id => $userData) {
-            if ($userData['username'] === $username) {
-                $user = new self();
-                $user->id = $id;
-                $user->username = $userData['username'];
-                $user->role = $userData['role'] ?? 'participant';
-                $user->groups = $userData['groups'] ?? [];
-                $user->points = $userData['points'] ?? 0;
-                $user->gender = $userData['gender'] ?? null;
-                $user->tags = $userData['tags'] ?? [];
-                $user->password = $userData['password'] ?? null;
-                $user->created_at = $userData['created_at'] ?? null;
-                return $user;
-            }
-        }
-        
-        return null;
+        if (!$row) return null;
+
+        // Decode JSON fields
+        $row['groups'] = json_decode($row['groups'] ?? '[]', true);
+        $row['tags']   = json_decode($row['tags'] ?? '[]', true);
+
+        $user = new self($row);
+        return $user;
     }
+
     public static function loadUsers(): array
     {
-        return readJsonFile(self::$dataFile) ?? [];
+        $pdo = \App\Database::getConnection();
+        $rows = $pdo->query("SELECT * FROM `" . self::$table . "`")->fetchAll();
+
+        $users = [];
+        foreach ($rows as $row) {
+            $users[$row['id']] = [
+                'username'   => $row['username'],
+                'role'       => $row['role'],
+                'groups'     => json_decode($row['groups'] ?? '[]', true),
+                'points'     => (int)($row['points'] ?? 0),
+                'gender'     => $row['gender'],
+                'tags'       => json_decode($row['tags'] ?? '[]', true),
+                'password'   => $row['password'],
+                'created_at' => $row['created_at'],
+            ];
+        }
+        return $users;
     }
 
-    private static function saveUsers(array $users): bool
+    public static function addPoints($userId, $pointsToAdd): bool
     {
-        return saveJsonFile(self::$dataFile, $users);
-    }
-    
-    public static function addPoints($userId, $pointsToAdd) {
-        $users = self::loadUsers();
-        if (isset($users[$userId])) {
-            $users[$userId]['points'] = ($users[$userId]['points'] ?? 0) + $pointsToAdd;
-            self::saveUsers($users);
-            return true;
-        }
-        return false;
+        $pdo = \App\Database::getConnection();
+        $stmt = $pdo->prepare("UPDATE `" . self::$table . "` SET points = points + :pts WHERE id = :id");
+        return $stmt->execute([':pts' => $pointsToAdd, ':id' => $userId]);
     }
 
-    public static function transferPoints($fromUserId, $toUsername, $amount) {
-        $users = self::loadUsers();
-        if (!isset($users[$fromUserId])) {
-            return ['success' => false, 'error' => 'Sender not found'];
-        }
-        $fromUser = $users[$fromUserId];
-        if (($fromUser['points'] ?? 0) < $amount) {
-            return ['success' => false, 'error' => 'Insufficient points'];
-        }
-        $toUserId = null;
-        foreach ($users as $uid => $u) {
-            if (isset($u['username']) && strtolower($u['username']) === strtolower($toUsername)) {
-                $toUserId = $uid;
-                break;
+    public static function transferPoints($fromUserId, $toUsername, $amount): array
+    {
+        $pdo = \App\Database::getConnection();
+
+        try {
+            $pdo->beginTransaction();
+
+            // Get sender row with lock
+            $stmt = $pdo->prepare("SELECT id, points FROM `" . self::$table . "` WHERE id = :id FOR UPDATE");
+            $stmt->execute([':id' => $fromUserId]);
+            $fromRow = $stmt->fetch();
+            if (!$fromRow) {
+                $pdo->rollBack();
+                return ['success' => false, 'error' => 'Sender not found'];
             }
+
+            if ((int)$fromRow['points'] < $amount) {
+                $pdo->rollBack();
+                return ['success' => false, 'error' => 'Insufficient points'];
+            }
+
+            // Get recipient id
+            $stmt = $pdo->prepare("SELECT id FROM `" . self::$table . "` WHERE LOWER(username) = LOWER(:uname) LIMIT 1 FOR UPDATE");
+            $stmt->execute([':uname' => $toUsername]);
+            $toRow = $stmt->fetch();
+            if (!$toRow) {
+                $pdo->rollBack();
+                return ['success' => false, 'error' => 'Recipient not found'];
+            }
+
+            // Update balances
+            $stmt = $pdo->prepare("UPDATE `" . self::$table . "` SET points = points - :amt WHERE id = :id");
+            $stmt->execute([':amt' => $amount, ':id' => $fromUserId]);
+
+            $stmt = $pdo->prepare("UPDATE `" . self::$table . "` SET points = points + :amt WHERE id = :id");
+            $stmt->execute([':amt' => $amount, ':id' => $toRow['id']]);
+
+            $pdo->commit();
+            return ['success' => true, 'points' => $fromRow['points'] - $amount];
+        } catch (\Throwable $e) {
+            $pdo->rollBack();
+            return ['success' => false, 'error' => $e->getMessage()];
         }
-        if (!$toUserId) {
-            return ['success' => false, 'error' => 'Recipient not found'];
-        }
-        $users[$fromUserId]['points'] -= $amount;
-        $users[$toUserId]['points'] = ($users[$toUserId]['points'] ?? 0) + $amount;
-        self::saveUsers($users);
-        return ['success' => true, 'points' => $users[$fromUserId]['points']];
     }
 }

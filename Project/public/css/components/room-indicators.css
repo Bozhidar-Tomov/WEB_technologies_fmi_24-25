@@ -1,0 +1,85 @@
+.room-main {
+    position: relative;
+}
+
+.cue-icon {
+    font-size: 1.5em;
+}
+
+.mic-recording-indicator {
+    position: fixed;
+    top: 12px;
+    right: 18px;
+    z-index: 10010;
+    background: rgba(255,255,255,0.95);
+    border-radius: 8px;
+    padding: 6px 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    font-weight: bold;
+    color: #c92a2a;
+    align-items: center;
+    gap: 0.5em;
+    display: none;
+}
+
+.recording-dot {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    background: #c92a2a;
+    border-radius: 50%;
+    margin-right: 8px;
+    box-shadow: 0 0 6px 2px #faa2a2;
+}
+
+/* Cue controls */
+.cue-btn {
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin: 0 5px;
+    transition: all 0.2s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.cue-btn.cue-on.flash-cue {
+    background: #ffe066;
+    border: 2px solid #ffd700;
+}
+
+.cue-btn.cue-off.flash-cue {
+    background: #f8f9fa;
+    border: 2px solid #ccc;
+}
+
+.cue-btn.cue-on.beep-cue {
+    background: #b2f2ff;
+    border: 2px solid #38bdf8;
+}
+
+.cue-btn.cue-off.beep-cue {
+    background: #f8f9fa;
+    border: 2px solid #ccc;
+}
+
+.cue-btn.cue-on .cue-icon {
+    opacity: 1;
+}
+
+.cue-btn.cue-off .cue-icon {
+    opacity: 0.4;
+}
+
+/* Flash overlay */
+#flashCueOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: white;
+    opacity: 0;
+    z-index: 9999;
+    pointer-events: none;
+    transition: opacity 0.2s;
+} 

@@ -1,0 +1,12 @@
+.sim-audience-control {
+    margin-bottom: 0.5em;
+    display: flex;
+    align-items: center;
+}
+
+/* For slider container */
+.slider-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+} 

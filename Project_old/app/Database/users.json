@@ -1,0 +1,28 @@
+{
+    "684c599a36fe2": {
+        "username": "a",
+        "role": "participant",
+        "groups": [
+            "female",
+            "Group A"
+        ],
+        "points": 10,
+        "gender": "female",
+        "tags": [],
+        "password": "$2y$10$czR7RZkQiAp0jbIC.tK4Geow4/yo86kAWivyfRj/v4uMhdxyaNZvG",
+        "created_at": "2025-06-13 19:02:18"
+    },
+    "684c599a36fe3": {
+        "username": "s",
+        "role": "admin",
+        "groups": [
+            "female",
+            "Group A"
+        ],
+        "points": 181,
+        "gender": "female",
+        "tags": [],
+        "password": "$2y$10$czR7RZkQiAp0jbIC.tK4Geow4/yo86kAWivyfRj/v4uMhdxyaNZvG",
+        "created_at": "2025-06-13 19:02:18"
+    }
+}
