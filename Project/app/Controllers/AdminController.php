@@ -40,10 +40,24 @@ class AdminController extends BaseController
             'intensity' => (int)($_POST['intensity'] ?? 50),
             'duration' => (int)($_POST['duration'] ?? 5),
             'countdown' => (int)($_POST['countdown'] ?? 3),
-            'groups' => $_POST['groups'] ?? '',
             'message' => $_POST['message'] ?? '',
             'timestamp' => time()
         ];
+        
+        // Process target groups
+        if (!empty($_POST['groups'])) {
+            $commandData['targetGroups'] = array_map('trim', explode(',', $_POST['groups']));
+        }
+        
+        // Process target tags
+        if (!empty($_POST['tags'])) {
+            $commandData['targetTags'] = array_map('trim', explode(',', $_POST['tags']));
+        }
+        
+        // Process target gender
+        if (!empty($_POST['gender'])) {
+            $commandData['targetGender'] = $_POST['gender'];
+        }
         
         try {
             $success = (new CommandService())->broadcastCommand($commandData);

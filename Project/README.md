@@ -14,14 +14,11 @@ The project follows an MVC flow:
 - `app/Views/index.php` → HTML page (user sees this)
 
 ```plaintext
-composer.json           # Project dependencies
 README.md               # Project documentation
 
 app/
-├── Components/         # Reusable UI elements (e.g. Blade emotion buttons)
 ├── Controllers/        # Handle HTTP requests (route entrypoints)
 ├── Database/           # Database connection and management
-├── Helpers/            # Common utility logic (formatters, validators)
 ├── Models/             # Models (DB representations like User, Command)
 ├── Services/           # App logic (CommandService, ValidationService)
 └── Views/              # Views or templates shown to users
@@ -34,9 +31,10 @@ config/
 public/
 ├── index.php           # App entry point
 ├── css/                # CSS styles
-├── js/                 # JavaScript (add socket clients here)
+├── js/                 # JavaScript for client-side functionality
 ├── api/                # API endpoints
-└── media/              # Audio/video assets for emotions
+├── audio/              # Audio files for reactions
+└── media/              # Images and other media assets
 
 routes/
 └── routes.php          # Route definitions (connect URLs to controllers)
@@ -47,7 +45,7 @@ Apache server start point: `Project/public`
 
 ## Database Setup
 
-The application now uses MySQL for data storage. Follow these steps to set up the database:
+The application uses MySQL for data storage. Follow these steps to set up the database:
 
 1. Make sure you have XAMPP installed with MySQL service running
 2. Update database configuration in `config/database.php` if needed (default: localhost, root, no password)
@@ -115,13 +113,15 @@ Commands follow this structure:
   "intensity": <intensity_value>,
   "duration": <duration_seconds>,
   "targetGroups": ["group1", "group2"],
+  "targetTags": ["tag1", "tag2"],
+  "targetGender": "<gender>",
   "message": "<custom_message>"
 }
 ```
 
 ## Available Commands
 
-- clap/applaud: Users clap their hands
+- clap/applause: Users clap their hands
 - cheer: Users cheer vocally
 - boo: Users express disapproval
 - murmur: Users talk quietly among themselves
@@ -146,3 +146,12 @@ Server-Sent Events are supported by all modern browsers:
 - Opera 11.5+
 
 For older browsers (e.g., IE), the app falls back to JSON polling.
+
+## Recent Optimizations
+
+The codebase has been cleaned up to remove:
+- Unused placeholder files
+- Redundant code in the SSE server
+- Unnecessary user agent tracking
+- Optimized database queries in the admin panel
+- Improved performance in the CommandService

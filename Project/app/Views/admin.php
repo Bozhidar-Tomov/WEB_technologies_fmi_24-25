@@ -72,14 +72,22 @@ try {
                     <label for="duration">Duration (seconds):</label>
                     <input type="number" id="duration" name="duration" min="1" max="30" value="5">
 
-
                     <label for="countdown">Countdown (seconds):</label>
                     <input type="number" id="countdown" name="countdown" min="0" max="10" value="3">
 
-
                     <label for="groups">Target Groups (comma-separated):</label>
-                    <input type="text" id="groups" name="groups" placeholder="e.g., VIP,male,section-A">
-
+                    <input type="text" id="groups" name="groups" placeholder="e.g., VIP,section-A">
+                    
+                    <label for="tags">Target Tags (comma-separated):</label>
+                    <input type="text" id="tags" name="tags" placeholder="e.g., VIP,premium,student">
+                    
+                    <label for="gender">Target Gender:</label>
+                    <select id="gender" name="gender">
+                        <option value="">All</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
+                    </select>
 
                     <label for="message">Custom Message:</label>
                     <input type="text" id="message" name="message" placeholder="Optional instruction or message">
@@ -115,7 +123,9 @@ try {
                         <b>Intensity:</b> <?= htmlspecialchars($cmd['intensity']) ?><br>
                         <b>Duration:</b> <?= htmlspecialchars($cmd['duration']) ?>s<br>
                         <b>Countdown:</b> <?= htmlspecialchars($cmd['countdown']) ?>s<br>
-                        <b>Groups:</b> <?= htmlspecialchars($cmd['groups']) ?><br>
+                        <b>Target Groups:</b> <?= htmlspecialchars(is_array($cmd['targetGroups'] ?? null) ? implode(', ', $cmd['targetGroups']) : ($cmd['targetGroups'] ?? 'All')) ?><br>
+                        <b>Target Tags:</b> <?= htmlspecialchars(is_array($cmd['targetTags'] ?? null) ? implode(', ', $cmd['targetTags']) : ($cmd['targetTags'] ?? 'All')) ?><br>
+                        <b>Target Gender:</b> <?= htmlspecialchars($cmd['targetGender'] ?? 'All') ?><br>
                         <b>Message:</b> <?= htmlspecialchars($cmd['message']) ?><br>
                         <b>Sent at:</b> <?= date('Y-m-d H:i:s', $cmd['timestamp']) ?>
                     <?php else: ?>
@@ -133,10 +143,6 @@ try {
                     <label>Current Volume:</label>
                     <span id="currentVolume"><?php
                         // Calculate average volume for current command
-                        $currentVolume = 0;
-                        $responseRate = 0;
-                        $numResponded = 0;
-                        $numActive = $activeUsers;
                         $avgVolume = 0;
                         $cmdId = null;
                         
@@ -148,26 +154,14 @@ try {
                             if ($cmdId) {
                                 // Get mic results for active command
                                 $stmt = $db->query(
-                                    "SELECT volume, reaction_accuracy FROM mic_results WHERE command_id = ?",
+                                    "SELECT AVG(volume) as avg_volume FROM mic_results WHERE command_id = ?",
                                     [$cmdId]
                                 );
-                                $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                                $result = $stmt->fetch(PDO::FETCH_ASSOC);
                                 
-                                $volumes = [];
-                                $responded = 0;
-                                
-                                foreach ($results as $result) {
-                                    $volumes[] = $result['volume'] ?? 0;
-                                    if (($result['reaction_accuracy'] ?? 0) >= 15) {
-                                        $responded++;
-                                    }
+                                if ($result && isset($result['avg_volume'])) {
+                                    $avgVolume = round($result['avg_volume']);
                                 }
-                                
-                                if (count($volumes) > 0) {
-                                    $avgVolume = round(array_sum($volumes) / count($volumes));
-                                }
-                                
-                                $numResponded = $responded;
                             }
                         } catch (PDOException $e) {
                             // Handle error silently
@@ -180,9 +174,28 @@ try {
                     <label>Response Rate:</label>
                     <span id="responseRate"><?php
                         $rate = 0;
-                        if ($numActive > 0) {
-                            $rate = round(($numResponded / $numActive) * 100);
+                        $numResponded = 0;
+                        $numActive = $activeUsers;
+                        
+                        try {
+                            if ($cmdId && $numActive > 0) {
+                                // Count users who responded to the active command
+                                $stmt = $db->query(
+                                    "SELECT COUNT(DISTINCT user_id) as count FROM mic_results 
+                                     WHERE command_id = ? AND reaction_accuracy >= 15",
+                                    [$cmdId]
+                                );
+                                $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                                
+                                if ($result) {
+                                    $numResponded = (int)$result['count'];
+                                    $rate = round(($numResponded / $numActive) * 100);
+                                }
+                            }
+                        } catch (PDOException $e) {
+                            // Handle error silently
                         }
+                        
                         echo $rate . '%';
                     ?></span>
                 </div>

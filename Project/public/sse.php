@@ -48,7 +48,7 @@ while (time() < $endTime) {
         $lastActiveUpdateTime = time();
     }
     
-    // Check for new commands every 2 seconds to reduce file system load
+    // Check for new commands every 2 seconds
     if (time() - $lastCheckTime >= 2) {
         $command = checkForNewCommands($commandService, $userId);
         $lastCheckTime = time();
@@ -71,33 +71,29 @@ while (time() < $endTime) {
     }
     
     // Sleep to prevent CPU hogging
-    usleep(500000); // Sleep for 0.5 seconds instead of 1 second for more responsive updates
+    usleep(500000); // Sleep for 0.5 seconds
 }
 
 $commandService->removeActiveUser($userId);
 
-
 function checkForNewCommands($commandService, $userId) {
-    // Get the active command using the CommandService
+    // Get the active command
     $command = $commandService->getActiveCommand();
     
-    if (!$command) {
+    if (!$command || empty($command['id'])) {
         return null;
     }
     
-    // Check if this is a new command the user hasn't seen
-    $commandId = $command['id'] ?? '';
-    if (empty($commandId)) {
-        return null;
-    }
-    
-    // Check if the command has expired based on its timestamp and duration
+    // Check if the command has expired
     $timestamp = $command['timestamp'] ?? 0;
     $duration = $command['duration'] ?? 0;
-    $currentTime = time();
     
-    if ($duration > 0 && $currentTime > ($timestamp + $duration)) {
-        // Command has expired, don't show it
+    if ($duration > 0 && time() > ($timestamp + $duration)) {
+        return null;
+    }
+    
+    // Check if the user matches the target filters
+    if (!$commandService->userMatchesCommandFilters($userId, $command)) {
         return null;
     }
     
