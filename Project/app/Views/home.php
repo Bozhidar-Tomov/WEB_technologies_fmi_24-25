@@ -1,3 +1,5 @@
+<?php $basePath = defined('BASE_PATH') ? BASE_PATH : ''; ?>
+
 <div class="common-container">
     <?php if (!empty($data['title'])): ?>
         <h2 class="page-title"><?= htmlspecialchars($data['title']) ?></h2>
@@ -17,14 +19,14 @@
     <div class="buttons">
         <?php if (isset($_SESSION['user'])): ?>
             <?php if (isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'admin'): ?>
-                <a href="../admin" class="btn btn-primary">Admin Panel</a>
-                <a href="../room" class="btn btn-secondary">Go to Room</a>
+                <a href="<?= $basePath ?>/admin" class="btn btn-primary">Admin Panel</a>
+                <a href="<?= $basePath ?>/room" class="btn btn-secondary">Go to Room</a>
                 <?php else: ?>
-                <a href="../room" class="btn btn-primary">Go to Room</a>
+                <a href="<?= $basePath ?>/room" class="btn btn-primary">Go to Room</a>
             <?php endif; ?>
         <?php else: ?>
-            <a href="../login" class="btn btn-primary">Login</a>
-            <a href="../register" class="btn btn-secondary">Register</a>
+            <a href="<?= $basePath ?>/login" class="btn btn-primary">Login</a>
+            <a href="<?= $basePath ?>/register" class="btn btn-secondary">Register</a>
         <?php endif; ?>
     </div>
 </div>

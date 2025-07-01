@@ -13,7 +13,8 @@ class AdminController extends BaseController
         if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
             $_SESSION['error'] = ['Unauthorized access'];
             http_response_code(403);
-            header('Location: /');
+            $basePath = $this->getBasePath();
+            header("Location: {$basePath}/");
             exit;
         }
     }
@@ -31,7 +32,8 @@ class AdminController extends BaseController
         
         if (empty($type)) {
             $_SESSION['error'] = ['Command type is required'];
-            header('Location: /admin');
+            $basePath = $this->getBasePath();
+            header("Location: {$basePath}/admin");
             exit;
         }
         
@@ -72,7 +74,8 @@ class AdminController extends BaseController
             $_SESSION['error'] = ['Error broadcasting command: ' . $e->getMessage()];
         }
         
-        header('Location: /admin');
+        $basePath = $this->getBasePath();
+        header("Location: {$basePath}/admin");
         exit;
     }
 }

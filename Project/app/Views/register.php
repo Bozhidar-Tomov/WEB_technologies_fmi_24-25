@@ -21,7 +21,8 @@
         </div>
     <?php endif; ?>
 
-    <form action="../register" method="post" autocomplete="on">
+    <?php $basePath = defined('BASE_PATH') ? BASE_PATH : ''; ?>
+    <form action="<?= $basePath ?>/register" method="post" autocomplete="on">
         <label for="username">Username:</label>
         <input type="text" name="username" id="username" autocomplete="username" value="<?= $old['username'] ?? '' ?>" required>
 
@@ -47,5 +48,5 @@
 
         <button class="btn btn-primary" type="submit">Register</button>
     </form>
-    <p>Already have an account? <a class="link" href="../login">Login here.</a></p>
+    <p>Already have an account? <a class="link" href="<?= $basePath ?>/login">Login here.</a></p>
 </section>

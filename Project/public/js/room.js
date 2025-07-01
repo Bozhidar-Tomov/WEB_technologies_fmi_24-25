@@ -1,5 +1,7 @@
 // Get user ID from global variable
 const userId = window.userId || "";
+// Get the base path from a global variable that will be set in the view
+const basePath = window.basePath || "";
 let evtSource = null;
 let reconnectAttempts = 0;
 let currentCommandId = null;
@@ -7,6 +9,7 @@ let reconnectTimer = null;
 let processedCommands = new Set(); // Track processed commands to prevent duplicates
 let clearInstructionTimeout = null;
 let countdownTimeout = null;
+let resetCommandTimeout = null; // Add timeout for resetting command display
 
 // --- Microphone Recording & Analysis ---
 let micStream = null;
@@ -24,7 +27,7 @@ function connectSSE() {
     evtSource.close();
   }
 
-  evtSource = new EventSource("../sse");
+  evtSource = new EventSource(basePath + "/sse");
 
   evtSource.onopen = function () {
     console.log("SSE connection established");
@@ -115,6 +118,9 @@ function connectSSE() {
     if (countdownTimeout) {
       clearTimeout(countdownTimeout);
     }
+    if (resetCommandTimeout) {
+      clearTimeout(resetCommandTimeout);
+    }
 
     let countdownSeconds = 0;
     if (data.countdown) {
@@ -126,12 +132,39 @@ function connectSSE() {
 
     // Always start mic recording after countdown, for the duration
     let duration = (typeof data.duration === "number" && data.duration > 0) ? data.duration : 0;
+    
+    // Schedule reset of command display after duration + countdown time
+    const totalTime = (countdownSeconds + Math.max(duration, 1)) * 1000; // Ensure at least 1 second after countdown
+    resetCommandTimeout = setTimeout(() => {
+      resetCommandDisplay();
+    }, totalTime);
+    
     if (duration > 0) {
       setTimeout(() => {
         startMicRecording(duration, data.id, data.type);
       }, countdownSeconds * 1000);
     }
   });
+}
+
+// Function to reset command display after command is complete
+function resetCommandDisplay() {
+  const commandElement = document.getElementById("commandText");
+  const countdownElement = document.getElementById("countdownDisplay");
+  const messageElement = document.getElementById("adminMessage");
+  
+  // Reset command text
+  commandElement.textContent = "Awaiting next command...";
+  
+  // Reset countdown display
+  countdownElement.textContent = "";
+  
+  // Hide admin message if present
+  if (messageElement) {
+    messageElement.style.display = "none";
+  }
+  
+  console.log("Command display reset");
 }
 
 // --- Cue Controls ---
@@ -413,38 +446,24 @@ async function analyzeAudioBlob(blob, sampleRate, commandType) {
 }
 
 function sendMicResults(results) {
-  fetch('../api/mic_results.php', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+  fetch(basePath + "/api/mic_results.php", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify({
-      userId: window.userId,
-      ...results
+      userId: userId,
+      commandId: currentCommandId,
+      results: results,
+    }),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      console.log("Mic results sent successfully:", data);
     })
-  }).then(r => r.json()).then(resp => {
-    console.log('Mic results sent:', resp);
-    // Update UI with results
-    if (results.intensity !== undefined) {
-      document.getElementById('audienceIntensity').textContent = results.intensity + '%';
-    }
-    if (results.volume !== undefined) {
-      document.getElementById('audienceVolume').textContent = results.volume + ' dB';
-    }
-    if (results.reactionAccuracy !== undefined) {
-      if (document.getElementById('reactionAccuracy')) {
-        document.getElementById('reactionAccuracy').textContent = results.reactionAccuracy + '%';
-      }
-    }
-    // Update points instantly if returned
-    if (resp.points !== undefined) {
-      // Find the Points field in the user info panel and update it
-      const pointsLi = Array.from(document.querySelectorAll('.user-info-list li')).find(li => li.textContent.includes('Points:'));
-      if (pointsLi) {
-        pointsLi.innerHTML = `<strong>Points:</strong> ${resp.points}`;
-      }
-    }
-  }).catch(e => {
-    console.error('Failed to send mic results:', e);
-  });
+    .catch((error) => {
+      console.error("Error sending mic results:", error);
+    });
 }
 
 document.addEventListener('DOMContentLoaded', function () {

@@ -14,7 +14,8 @@ class RegisterController extends BaseController
         if (!empty($_SESSION['user'])) {
             $_SESSION['warning'] = ['You are already logged in.'];
             http_response_code(303);
-            header('Location: /');
+            $basePath = $this->getBasePath();
+            header("Location: {$basePath}/");
             exit;
         }
 
@@ -83,7 +84,9 @@ class RegisterController extends BaseController
                 'title'    => $user->role === 'admin' ? 'Admin Panel' : 'Room View'
             ];
 
-            header('Location: ' . ($user->role === 'admin' ? '/admin' : '/room'));
+            $basePath = $this->getBasePath();
+            $redirectPath = $user->role === 'admin' ? "{$basePath}/admin" : "{$basePath}/room";
+            header("Location: {$redirectPath}");
             exit;
         }
 

@@ -6,6 +6,13 @@ class Router
         'GET' => [],
         'POST' => [],
     ];
+    
+    private $basePath = '';
+    
+    public function __construct($basePath = '')
+    {
+        $this->basePath = $basePath;
+    }
 
     public function get($uri, $action)
     {
@@ -43,6 +50,16 @@ class Router
 
     private function normalize($uri)
     {
+        // Remove the base path from the URI if it exists
+        if ($this->basePath && strpos($uri, $this->basePath) === 0) {
+            $uri = substr($uri, strlen($this->basePath));
+        }
+        
         return rtrim($uri, '/') ?: '/';
+    }
+    
+    public function getBasePath()
+    {
+        return $this->basePath;
     }
 }

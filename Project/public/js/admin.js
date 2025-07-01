@@ -1,3 +1,5 @@
+// Get the base path from a global variable that will be set in the view
+const basePath = window.basePath || "";
 const intensitySlider = document.getElementById('intensity');
 const intensityValue = document.getElementById('intensityValue');
 
@@ -34,7 +36,7 @@ if (commandForm) {
 
 // Function to update statistics section
 function updateStatistics() {
-  fetch('../api/admin_stats.php')
+  fetch(basePath + '/api/admin_stats.php')
     .then(response => response.json())
     .then(data => {
       if (data.error) {
@@ -99,7 +101,7 @@ function updateSimAudienceBtnAndSlider() {
   
   if (!simBtn || !simBtnText) return;
   
-  fetch('../api/toggle_sim_audience.php', { method: 'GET' })
+  fetch(basePath + '/api/toggle_sim_audience.php', { method: 'GET' })
     .then(r => r.json())
     .then(resp => {
       if (resp.success) {
@@ -124,7 +126,7 @@ function setupSimAudienceToggle() {
     simFeedback.textContent = '';
     const enable = simBtnText.textContent.trim().toLowerCase() === 'enable';
     
-    fetch('../api/toggle_sim_audience.php', {
+    fetch(basePath + '/api/toggle_sim_audience.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: enable ? 'sim_audience=on' : ''

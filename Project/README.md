@@ -1,4 +1,6 @@
-# CrowdPulse Project
+# Crowd Pulse
+
+A web application for crowd reaction management.
 
 ## Overview
 
@@ -189,3 +191,60 @@ This project can be run on any machine with XAMPP installed without any configur
 - The project will use port 8080 by default. If this port is already in use, modify the port number in the run script.
 - No Apache virtual hosts configuration is needed
 - You can run this project from any directory
+
+## Deployment Instructions
+
+### Running the Project in XAMPP htdocs
+
+1. Clone or download this project into your XAMPP's `htdocs` directory:
+   ```
+   C:\xampp\htdocs\crowd-pulse\
+   ```
+
+2. Start Apache and MySQL services in XAMPP Control Panel.
+
+3. Access the application through your browser:
+   ```
+   http://localhost/crowd-pulse/public/
+   ```
+
+4. The application will automatically detect that it's running in a subfolder and adjust all paths accordingly.
+
+### Database Configuration
+
+1. Make sure your database configuration in `config/database.php` is correct.
+
+2. If needed, run the database initialization script:
+   ```
+   http://localhost/crowd-pulse/config/init_db.php
+   ```
+
+3. You can test your database connection using:
+   ```
+   http://localhost/crowd-pulse/config/test_db_connection.php
+   ```
+
+### Troubleshooting
+
+If you encounter any issues:
+
+1. Check that all files have proper permissions.
+
+2. Clear your browser cache if you see outdated CSS or JavaScript.
+
+3. Check PHP error logs for any server-side issues.
+
+## Development Notes
+
+The application has been simplified to work directly from the XAMPP htdocs directory without requiring virtual hosts or .htaccess files. It uses a dynamic base path detection system to ensure all URLs work correctly regardless of the installation folder.
+
+Key features:
+
+1. The Router automatically detects the base path and handles subfolder installations.
+2. All URLs in views and JavaScript files are generated dynamically.
+3. A BASE_PATH constant is defined and used throughout the application.
+4. Form validation is enabled for login and registration.
+
+## Original Authors
+
+Bozhidar Tomov, Mira Velikova

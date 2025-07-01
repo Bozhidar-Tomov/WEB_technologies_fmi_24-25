@@ -6,7 +6,9 @@ class LogoutController
         session_unset();
         session_destroy();
         session_abort();
-        header('Location: /login');
+        
+        $basePath = defined('BASE_PATH') ? BASE_PATH : '';
+        header("Location: {$basePath}/login");
         exit;
     }
 }

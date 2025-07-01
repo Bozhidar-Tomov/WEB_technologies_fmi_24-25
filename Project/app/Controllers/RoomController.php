@@ -7,7 +7,8 @@ class RoomController extends BaseController
     {
         if (!isset($_SESSION['user'])) {
             $_SESSION['error'] = ['You must be logged in to access this page.'];
-            header('Location: /');
+            $basePath = $this->getBasePath();
+            header("Location: {$basePath}/");
             exit;
         }
         $user = $_SESSION['user'];

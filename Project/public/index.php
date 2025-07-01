@@ -1,42 +1,17 @@
 <?php
 session_start();
 
-// Fix for PHP built-in server to handle static files
-if (php_sapi_name() == 'cli-server') {
-    $url = parse_url($_SERVER['REQUEST_URI']);
-    $file = __DIR__ . $url['path'];
-    
-    // Serve static files directly
-    if (is_file($file)) {
-        $extension = pathinfo($file, PATHINFO_EXTENSION);
-        switch ($extension) {
-            case 'css':
-                header('Content-Type: text/css');
-                break;
-            case 'js':
-                header('Content-Type: application/javascript');
-                break;
-            case 'png':
-            case 'jpg':
-            case 'jpeg':
-            case 'gif':
-                header('Content-Type: image/' . $extension);
-                break;
-            case 'mp3':
-                header('Content-Type: audio/mpeg');
-                break;
-            case 'wav':
-                header('Content-Type: audio/wav');
-                break;
-        }
-        readfile($file);
-        return true;
-    }
-}
-
 require_once __DIR__ . '/../routes/Router.php';
 
-$router = new Router();
+// Detect the base path
+$scriptName = dirname($_SERVER['SCRIPT_NAME']);
+$basePath = $scriptName !== '/' ? $scriptName : '';
+
+// Create router with detected base path
+$router = new Router($basePath);
 require_once __DIR__ . '/../routes/routes.php';
+
+// Make the base path available for the application
+define('BASE_PATH', $basePath);
 
 $router->dispatch($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD']);

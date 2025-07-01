@@ -12,7 +12,8 @@ class LoginController extends BaseController
     {
         if (!empty($_SESSION['user'])) {
             $_SESSION['warning'] = ['You are already logged in.'];
-            header('Location: /', true, 303);
+            $basePath = $this->getBasePath();
+            header("Location: {$basePath}/", true, 303);
             exit;
         }
 
@@ -47,7 +48,9 @@ class LoginController extends BaseController
                         'title' => $user->role === 'admin' ? 'Admin Panel' : 'Room View'
                     ];
 
-                    header('Location: ' . ($user->role === 'admin' ? '/admin' : '/room'));
+                    $basePath = $this->getBasePath();
+                    $redirectPath = $user->role === 'admin' ? "{$basePath}/admin" : "{$basePath}/room";
+                    header("Location: {$redirectPath}");
                     exit;
                 }
                 else {
