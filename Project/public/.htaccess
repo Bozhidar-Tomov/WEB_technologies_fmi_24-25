@@ -1,13 +1,21 @@
-RewriteEngine On
+# Handle front controller pattern for Apache server
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Handle Authorization Header
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+    
+    # Redirect Trailing Slashes If Not A Folder...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteRule ^ %1 [L,R=301]
+    
+    # Send Requests To Front Controller...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+</IfModule>
 
-# Prevent rewriting for existing files and folders
-RewriteCond %{REQUEST_FILENAME} -f [OR]
-RewriteCond %{REQUEST_FILENAME} -d
-RewriteRule ^ - [L]
-
-# Bypass rewrite for SSE endpoint explicitly (optional but safe)
-RewriteCond %{REQUEST_URI} ^/sse\.php$ [NC]
-RewriteRule ^ - [L]
-
-# Send all other requests to index.php
-RewriteRule ^ index.php?path=$1 [QSA,L]
+# Disable directory browsing
+Options -Indexes
