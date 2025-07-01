@@ -189,3 +189,58 @@ This project can be run on any machine with XAMPP installed without any configur
 - The project will use port 8080 by default. If this port is already in use, modify the port number in the run script.
 - No Apache virtual hosts configuration is needed
 - You can run this project from any directory
+
+# Room App
+
+A web application for real-time audience response and command management.
+
+## Setup & Installation
+
+1. Clone the repository
+2. Configure the application settings in `config/app.php`
+3. Run the application using either:
+   - `run.bat` (Windows)
+   - `run.sh` (Linux/Mac)
+
+## Configuration
+
+The application uses a central configuration file located at `config/app.php`. This file contains all the settings needed to run the application, including:
+
+- Server settings (host, port)
+- Base path settings
+- Session configuration
+
+### Changing Server Port
+
+To change the port on which the application runs, update the `port` value in `config/app.php`:
+
+```php
+'server' => [
+    'port' => 8080,  // Change this to your desired port
+    'host' => 'localhost',
+],
+```
+
+### Base Path Configuration
+
+If your application is not running at the root of the domain, you can set a base path:
+
+```php
+'app' => [
+    'base_path' => '/myapp',  // This would make the app available at http://localhost:8080/myapp
+    'debug' => true,
+],
+```
+
+## Database Configuration
+
+Database configuration is located in `config/database.php`. See that file for database settings.
+
+## Running the Application
+
+After configuring the application, you can run it using:
+
+- Windows: Double-click the `run.bat` file
+- Linux/Mac: In terminal run `./run.sh` (you might need to make it executable with `chmod +x run.sh`)
+
+This will start a PHP development server at the configured host and port.

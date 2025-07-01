@@ -3,19 +3,22 @@
 class BaseController
 {
     protected $basePath = '';
+    protected $config = [];
     
     public function __construct()
     {
         global $router;
-        $this->basePath = isset($router) ? $router->getBasePath() : '';
+        $this->config = require_once __DIR__ . '/../../config/app.php';
+        $this->basePath = isset($router) ? $router->getBasePath() : $this->config['app']['base_path'];
     }
     
     protected function render($view, $data = [])
     {
         $viewFile = __DIR__ . '/../Views/' . $view . '.php';
         
-        // Add base path to the data array for use in views
+        // Add base path and config to the data array for use in views
         $data['basePath'] = $this->basePath;
+        $data['config'] = $this->config;
 
         ob_start();
         if (file_exists($viewFile)) {
@@ -38,5 +41,10 @@ class BaseController
         $path = ltrim($path, '/');
         header("Location: {$this->basePath}/{$path}");
         exit;
+    }
+    
+    protected function getConfig()
+    {
+        return $this->config;
     }
 }

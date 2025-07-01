@@ -1,6 +1,9 @@
 <?php
 session_start();
 
+// Load application configuration
+$config = require_once __DIR__ . '/../config/app.php';
+
 // Fix for PHP built-in server to handle static files
 if (php_sapi_name() == 'cli-server') {
     $url = parse_url($_SERVER['REQUEST_URI']);
@@ -35,6 +38,16 @@ if (php_sapi_name() == 'cli-server') {
         }
         readfile($file);
         return true;
+    }
+}
+
+// Configure session with app settings
+if (isset($config['session'])) {
+    if (isset($config['session']['name'])) {
+        session_name($config['session']['name']);
+    }
+    if (isset($config['session']['lifetime'])) {
+        ini_set('session.gc_maxlifetime', $config['session']['lifetime']);
     }
 }
 

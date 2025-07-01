@@ -8,10 +8,12 @@ class Router
     ];
     
     private $basePath = '';
+    private $config = [];
 
     public function __construct()
     {
-        $this->basePath = $this->detectBasePath();
+        $this->config = require_once __DIR__ . '/../config/app.php';
+        $this->basePath = $this->config['app']['base_path'] ?: $this->detectBasePath();
     }
 
     public function get($uri, $action)
@@ -63,6 +65,11 @@ class Router
     public function getBasePath()
     {
         return $this->basePath;
+    }
+    
+    public function getConfig()
+    {
+        return $this->config;
     }
     
     private function detectBasePath()
