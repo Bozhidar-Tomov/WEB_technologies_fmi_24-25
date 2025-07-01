@@ -46,7 +46,7 @@ try {
                 </button>
             </div>
             <span id="simAudienceFeedback" style="color:#2b8a3e;"></span>
-            <form id="commandForm" method="post" action="../admin/broadcast" class="form-fields">
+            <form id="commandForm" method="post" action="<?= $basePath ?>/admin/broadcast" class="form-fields">
                     <label for="commandType">Command Type:</label>
                     <select id="commandType" name="type" required>
                         <option value="applause">Applause</option>
@@ -126,4 +126,7 @@ try {
     </section>
 </main>
 
-<script src="../js/admin.js"></script>
+<script>
+    window.basePath = "<?= $basePath ?>";
+</script>
+<script src="<?= $basePath ?>/js/admin.js"></script>

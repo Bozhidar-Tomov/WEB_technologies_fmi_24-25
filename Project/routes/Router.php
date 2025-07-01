@@ -6,6 +6,13 @@ class Router
         'GET' => [],
         'POST' => [],
     ];
+    
+    private $basePath = '';
+
+    public function __construct()
+    {
+        $this->basePath = $this->detectBasePath();
+    }
 
     public function get($uri, $action)
     {
@@ -19,7 +26,14 @@ class Router
 
     public function dispatch($requestUri, $requestMethod)
     {
-        $uri = $this->normalize(parse_url($requestUri, PHP_URL_PATH));
+        // Remove the base path from the request URI
+        $uri = str_replace($this->basePath, '', $this->normalize(parse_url($requestUri, PHP_URL_PATH)));
+        
+        // If URI is empty after removing base path, treat it as root
+        if (empty($uri)) {
+            $uri = '/';
+        }
+        
         $method = strtoupper($requestMethod);
         $action = $this->routes[$method][$uri] ?? null;
         if (!$action) {
@@ -44,5 +58,17 @@ class Router
     private function normalize($uri)
     {
         return rtrim($uri, '/') ?: '/';
+    }
+    
+    public function getBasePath()
+    {
+        return $this->basePath;
+    }
+    
+    private function detectBasePath()
+    {
+        $scriptName = dirname($_SERVER['SCRIPT_NAME']);
+        $basePath = $scriptName === '/' ? '' : $scriptName;
+        return $basePath;
     }
 }

@@ -1,5 +1,23 @@
 console.log("App JS loaded!");
 
+// Detect base path from script tag
+(function() {
+  // Try to detect base path from script URL
+  const scripts = document.getElementsByTagName('script');
+  const currentScript = scripts[scripts.length - 1];
+  let scriptSrc = currentScript.src || '';
+  
+  // Extract base path from the script source
+  const pathParts = scriptSrc.split('/');
+  pathParts.pop(); // Remove script name
+  pathParts.pop(); // Remove 'js' directory
+  
+  // Set global base path
+  window.basePath = pathParts.join('/');
+  
+  console.log("Base path detected:", window.basePath);
+})();
+
 // Global error handler to prevent silent failures
 window.addEventListener('error', function(event) {
   console.error('Global error:', event.error);
@@ -49,6 +67,11 @@ window.utils = {
   
   // Safely handle API calls with automatic error handling
   fetchAPI: function(url, options = {}) {
+    // Use base path for relative URLs
+    if (url.startsWith('/') && !url.startsWith('//')) {
+      url = window.basePath + url;
+    }
+    
     return fetch(url, options)
       .then(response => {
         if (!response.ok) {

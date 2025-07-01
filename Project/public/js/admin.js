@@ -1,5 +1,6 @@
 const intensitySlider = document.getElementById('intensity');
 const intensityValue = document.getElementById('intensityValue');
+let basePath = window.basePath || "";
 
 function updateSlider(slider) {
     if (!slider) return;
@@ -38,7 +39,7 @@ if (commandForm) {
 
 // Function to update statistics section
 function updateStatistics() {
-  fetch('../api/admin_stats.php')
+  fetch(basePath + '/api/admin_stats.php')
     .then(response => {
       if (!response.ok) {
         throw new Error(`HTTP error ${response.status}`);
@@ -113,7 +114,7 @@ function updateSimAudienceBtnAndSlider() {
   
   if (!simBtn || !simBtnText) return;
   
-  fetch('../api/toggle_sim_audience.php', { method: 'GET' })
+  fetch(basePath + '/api/toggle_sim_audience.php', { method: 'GET' })
     .then(r => {
       if (!r.ok) {
         throw new Error(`HTTP error ${r.status}`);
@@ -143,7 +144,7 @@ function setupSimAudienceToggle() {
     simFeedback.textContent = '';
     const enable = simBtnText.textContent.trim().toLowerCase() === 'enable';
     
-    fetch('../api/toggle_sim_audience.php', {
+    fetch(basePath + '/api/toggle_sim_audience.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: enable ? 'sim_audience=on' : ''

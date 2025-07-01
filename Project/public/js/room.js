@@ -7,6 +7,7 @@ let reconnectTimer = null;
 let processedCommands = new Set(); // Track processed commands to prevent duplicates
 let clearInstructionTimeout = null;
 let countdownTimeout = null;
+let basePath = window.basePath || "";
 
 // --- Microphone Recording & Analysis ---
 let micStream = null;
@@ -24,7 +25,7 @@ function connectSSE() {
     evtSource.close();
   }
 
-  evtSource = new EventSource("../sse");
+  evtSource = new EventSource(basePath + "/sse");
 
   evtSource.onopen = function () {
     console.log("SSE connection established");
@@ -549,12 +550,13 @@ async function analyzeAudioBlob(blob, sampleRate, commandType) {
 }
 
 function sendMicResults(results) {
-  fetch('../api/mic_results.php', {
+  fetch(basePath + "/api/mic_results.php", {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       userId: window.userId,
-      ...results
+      ...results,
+      commandId: currentCommandId
     })
   }).then(r => r.json()).then(resp => {
     console.log('Mic results sent:', resp);
