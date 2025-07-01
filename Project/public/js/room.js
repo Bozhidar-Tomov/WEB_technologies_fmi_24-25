@@ -60,55 +60,91 @@ function connectSSE() {
     console.log("Heartbeat received", data);
 
     if (data && typeof data.activeUsers !== "undefined") {
-      document.getElementById("audienceResponders").textContent = data.activeUsers;
+      const element = document.getElementById("audienceResponders");
+      if (element) {
+        element.textContent = data.activeUsers;
+      }
     }
   });
 
   evtSource.addEventListener("command", function (event) {
-    const data = JSON.parse(event.data);
-    console.log("Command received:", data);
+    try {
+      const data = JSON.parse(event.data);
+      console.log("Command received:", data);
 
-    // Skip if we've already processed this command
-    if (!data.id || processedCommands.has(data.id)) {
-      console.log(`Skipping duplicate command: ${data.id}`);
-      return;
-    }
+      // Skip if we've already processed this command
+      if (!data.id || processedCommands.has(data.id)) {
+        console.log(`Skipping duplicate command: ${data.id}`);
+        return;
+      }
 
-    // Mark this command as processed
-    processedCommands.add(data.id);
-    currentCommandId = data.id;
+      // Mark this command as processed
+      processedCommands.add(data.id);
+      currentCommandId = data.id;
 
-    // Limit the size of the processedCommands set to prevent memory issues
-    if (processedCommands.size > 50) {
-      const iterator = processedCommands.values();
-      processedCommands.delete(iterator.next().value);
-    }
+      // Limit the size of the processedCommands set to prevent memory issues
+      if (processedCommands.size > 50) {
+        const iterator = processedCommands.values();
+        processedCommands.delete(iterator.next().value);
+      }
 
-    document.getElementById("commandText").textContent =
-      data.type + (data.message ? ": " + data.message : "");
+      // Update the command text with command type
+      const commandElement = document.getElementById("commandText");
+      if (!commandElement) {
+        console.error("Command text element not found");
+        return;
+      }
+      
+      commandElement.textContent = data.type;
+      
+      // Display the admin message if present
+      if (data.message) {
+        // Check if message element already exists, if not create it
+        let messageElement = document.getElementById("adminMessage");
+        if (!messageElement) {
+          messageElement = document.createElement("p");
+          messageElement.id = "adminMessage";
+          messageElement.className = "admin-message";
+          commandElement.parentNode.insertBefore(messageElement, document.getElementById("countdownDisplay"));
+        }
+        messageElement.textContent = data.message;
+        messageElement.style.display = "block";
+      } else {
+        // Hide message element if no message
+        const existingMessage = document.getElementById("adminMessage");
+        if (existingMessage) {
+          existingMessage.style.display = "none";
+        }
+      }
 
-    // Clear any previous timeouts
-    if (clearInstructionTimeout) {
-      clearTimeout(clearInstructionTimeout);
-    }
-    if (countdownTimeout) {
-      clearTimeout(countdownTimeout);
-    }
+      // Clear any previous timeouts
+      if (clearInstructionTimeout) {
+        clearTimeout(clearInstructionTimeout);
+      }
+      if (countdownTimeout) {
+        clearTimeout(countdownTimeout);
+      }
 
-    let countdownSeconds = 0;
-    if (data.countdown) {
-      countdownSeconds = parseInt(data.countdown);
-      startCountdown(countdownSeconds);
-    } else {
-      document.getElementById("countdownDisplay").textContent = "Now!";
-    }
+      let countdownSeconds = 0;
+      if (data.countdown) {
+        countdownSeconds = parseInt(data.countdown);
+        startCountdown(countdownSeconds);
+      } else {
+        const countdownDisplay = document.getElementById("countdownDisplay");
+        if (countdownDisplay) {
+          countdownDisplay.textContent = "Now!";
+        }
+      }
 
-    // Always start mic recording after countdown, for the duration
-    let duration = (typeof data.duration === "number" && data.duration > 0) ? data.duration : 0;
-    if (duration > 0) {
-      setTimeout(() => {
-        startMicRecording(duration, data.id, data.type);
-      }, countdownSeconds * 1000);
+      // Always start mic recording after countdown, for the duration
+      let duration = (typeof data.duration === "number" && data.duration > 0) ? data.duration : 0;
+      if (duration > 0) {
+        setTimeout(() => {
+          startMicRecording(duration, data.id, data.type);
+        }, countdownSeconds * 1000);
+      }
+    } catch (err) {
+      console.error("Error processing command event:", err);
     }
   });
 }
@@ -158,6 +194,7 @@ function triggerBeep() {
       ctx.close();
     }, 150);
   } catch (e) {
+    console.error("Beep error:", e);
     // Ignore errors (e.g., user gesture required)
   }
 }
@@ -179,6 +216,12 @@ function updateCueIcons() {
   const beepBtn = document.getElementById('beepCueToggle');
   const flashIcon = document.getElementById('flashCueIcon');
   const beepIcon = document.getElementById('beepCueIcon');
+  
+  if (!flashBtn || !beepBtn || !flashIcon || !beepIcon) {
+    console.warn("Cue control elements not found");
+    return;
+  }
+  
   const prefs = getCuePrefs();
   if (prefs.flash) {
     flashBtn.classList.add('cue-on');
@@ -211,6 +254,12 @@ function updateCueIcons() {
 function setupCueControls() {
   const flashBtn = document.getElementById('flashCueToggle');
   const beepBtn = document.getElementById('beepCueToggle');
+  
+  if (!flashBtn || !beepBtn) {
+    console.warn("Cue control buttons not found");
+    return;
+  }
+  
   // Set initial state
   updateCueIcons();
   flashBtn.addEventListener('click', () => {
@@ -225,12 +274,23 @@ function setupCueControls() {
   });
 }
 
-document.addEventListener('DOMContentLoaded', setupCueControls);
+// Run setup when DOM is ready
+if (document.readyState === "loading") {
+  document.addEventListener('DOMContentLoaded', setupCueControls);
+} else {
+  // DOM already loaded
+  setupCueControls();
+}
 // --- End Cue Controls ---
 
 function startCountdown(seconds) {
   let countdown = parseInt(seconds);
   const countdownElement = document.getElementById("countdownDisplay");
+  
+  if (!countdownElement) {
+    console.error("Countdown element not found");
+    return;
+  }
 
   countdownElement.textContent = countdown;
 
@@ -263,7 +323,37 @@ connectSSE();
 window.addEventListener("beforeunload", () => {
   if (evtSource) evtSource.close();
   clearTimeout(reconnectTimer);
+  
+  // Clean up audio resources
+  cleanupAudioResources();
 });
+
+// Clean up audio resources when leaving the page or handling errors
+function cleanupAudioResources() {
+  if (micStream) {
+    micStream.getTracks().forEach(track => track.stop());
+    micStream = null;
+  }
+  
+  if (audioContext && audioContext.state !== 'closed') {
+    audioContext.close().catch(err => {
+      console.error("Error closing audio context:", err);
+    });
+    audioContext = null;
+  }
+  
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    try {
+      mediaRecorder.stop();
+    } catch (err) {
+      console.error("Error stopping media recorder:", err);
+    }
+  }
+  mediaRecorder = null;
+  
+  clearTimeout(micRecordingTimeout);
+  showMicIndicator(false);
+}
 
 const cueControlsStyle = document.createElement('style');
 cueControlsStyle.innerHTML = `
@@ -303,92 +393,159 @@ function showMicIndicator(show) {
 }
 
 async function startMicRecording(durationSec, commandId, commandType) {
+  // Clean up any existing resources first
+  cleanupAudioResources();
+  
   try {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      alert('Microphone access is not supported in this browser.');
+      console.error('Microphone access is not supported in this browser.');
       return;
     }
+    
     // Request mic access if not already granted
     micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
     audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    const source = audioContext.createMediaStreamSource(micStream);
-    mediaRecorder = new MediaRecorder(micStream);
-    audioChunks = [];
-    mediaRecorder.ondataavailable = e => {
-      if (e.data.size > 0) audioChunks.push(e.data);
-    };
-    mediaRecorder.onstop = async () => {
-      showMicIndicator(false);
-      const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-      // Analyze audio
-      const analysis = await analyzeAudioBlob(audioBlob, audioContext.sampleRate, commandType);
-      // Send results to server
-      sendMicResults({
-        commandId,
-        ...analysis
-      });
-      // Clean up
-      if (micStream) {
-        micStream.getTracks().forEach(track => track.stop());
-        micStream = null;
-      }
-      if (audioContext) {
-        audioContext.close();
-        audioContext = null;
-      }
-    };
-    mediaRecorder.start();
-    showMicIndicator(true);
-    micRecordingTimeout = setTimeout(() => {
-      if (mediaRecorder && mediaRecorder.state === 'recording') {
-        mediaRecorder.stop();
-      }
-    }, durationSec * 1000);
+    
+    try {
+      const source = audioContext.createMediaStreamSource(micStream);
+      mediaRecorder = new MediaRecorder(micStream);
+      audioChunks = [];
+      
+      mediaRecorder.ondataavailable = e => {
+        if (e.data && e.data.size > 0) audioChunks.push(e.data);
+      };
+      
+      mediaRecorder.onstop = async () => {
+        try {
+          showMicIndicator(false);
+          
+          if (audioChunks.length === 0) {
+            console.warn("No audio data recorded");
+            return;
+          }
+          
+          const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+          
+          // Analyze audio
+          try {
+            const analysis = await analyzeAudioBlob(audioBlob, audioContext.sampleRate, commandType);
+            
+            // Send results to server
+            sendMicResults({
+              commandId,
+              ...analysis
+            });
+          } catch (analysisErr) {
+            console.error("Audio analysis failed:", analysisErr);
+          }
+          
+          // Clean up
+          cleanupAudioResources();
+        } catch (err) {
+          console.error("Error in mediaRecorder onstop handler:", err);
+          cleanupAudioResources();
+        }
+      };
+      
+      mediaRecorder.onerror = (err) => {
+        console.error("MediaRecorder error:", err);
+        cleanupAudioResources();
+      };
+      
+      // Start recording
+      mediaRecorder.start();
+      showMicIndicator(true);
+      
+      // Set timeout to stop recording after duration
+      micRecordingTimeout = setTimeout(() => {
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+          try {
+            mediaRecorder.stop();
+          } catch (err) {
+            console.error("Error stopping media recorder:", err);
+            cleanupAudioResources();
+          }
+        }
+      }, durationSec * 1000);
+      
+    } catch (setupErr) {
+      console.error("Error setting up audio recording:", setupErr);
+      cleanupAudioResources();
+    }
   } catch (err) {
-    alert('Microphone access denied or error: ' + err.message);
+    console.error('Microphone access denied or error:', err);
     showMicIndicator(false);
+    cleanupAudioResources();
   }
 }
 
 async function analyzeAudioBlob(blob, sampleRate, commandType) {
-  // Basic analysis: get average volume (RMS), peak, and duration
-  const arrayBuffer = await blob.arrayBuffer();
+  // Create a new context for analysis to avoid conflicts
   const ctx = new (window.AudioContext || window.webkitAudioContext)();
-  const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
-  const data = audioBuffer.getChannelData(0);
-  let sum = 0, peak = 0, startIdx = -1, endIdx = -1;
-  for (let i = 0; i < data.length; i++) {
-    const abs = Math.abs(data[i]);
-    sum += abs * abs;
-    if (abs > peak) peak = abs;
-    if (startIdx === -1 && abs > 0.02) startIdx = i;
-    if (abs > 0.02) endIdx = i;
-  }
-  const rms = Math.sqrt(sum / data.length);
-  const duration = audioBuffer.duration;
-  let reactionAccuracy = 0;
-  if (commandType === 'silence') {
-    // Special logic: high accuracy if very little sound
-    if (rms < 0.01) {
-      reactionAccuracy = 100;
+  
+  try {
+    // Basic analysis: get average volume (RMS), peak, and duration
+    const arrayBuffer = await blob.arrayBuffer();
+    const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+    const data = audioBuffer.getChannelData(0);
+    
+    let sum = 0, peak = 0, startIdx = -1, endIdx = -1;
+    const threshold = 0.02;
+    
+    for (let i = 0; i < data.length; i++) {
+      const abs = Math.abs(data[i]);
+      sum += abs * abs;
+      if (abs > peak) peak = abs;
+      if (startIdx === -1 && abs > threshold) startIdx = i;
+      if (abs > threshold) endIdx = i;
+    }
+    
+    const rms = Math.sqrt(sum / data.length) || 0;
+    const duration = audioBuffer.duration || 0;
+    let reactionAccuracy = 0;
+    
+    if (commandType === 'silence') {
+      // Special logic: high accuracy if very little sound
+      if (rms < 0.01) {
+        reactionAccuracy = 100;
+      } else {
+        // Scale down accuracy based on how loud the sound was
+        reactionAccuracy = Math.max(0, 100 - Math.round(rms * 1000)); // e.g., rms 0.05 -> 50% accuracy
+      }
     } else {
-      // Scale down accuracy based on how loud the sound was
-      reactionAccuracy = Math.max(0, 100 - Math.round(rms * 1000)); // e.g., rms 0.05 -> 50% accuracy
+      // Reaction accuracy: how soon after recording started did the sound start?
+      if (startIdx !== -1) {
+        const startSec = startIdx / sampleRate;
+        reactionAccuracy = Math.max(0, 1 - startSec / duration); // 1 = instant, 0 = very late
+        reactionAccuracy = Math.round(reactionAccuracy * 100);
+      }
     }
-  } else {
-    // Reaction accuracy: how soon after recording started did the sound start?
-    if (startIdx !== -1) {
-      const startSec = startIdx / sampleRate;
-      reactionAccuracy = Math.max(0, 1 - startSec / duration); // 1 = instant, 0 = very late
-      reactionAccuracy = Math.round(reactionAccuracy * 100);
+    
+    // Clean up
+    await ctx.close().catch(err => console.error("Error closing audio context:", err));
+    
+    return {
+      intensity: Math.round(rms * 100),
+      volume: Math.round(peak * 100),
+      reactionAccuracy
+    };
+  } catch (err) {
+    console.error("Error analyzing audio:", err);
+    
+    // Try to clean up
+    try {
+      await ctx.close();
+    } catch (closeErr) {
+      console.error("Error closing audio context:", closeErr);
     }
+    
+    // Return default values
+    return {
+      intensity: 0,
+      volume: 0,
+      reactionAccuracy: 0
+    };
   }
-  await ctx.close();
-  return {
-    intensity: Math.round(rms * 100),
-    volume: Math.round(peak * 100),
-    reactionAccuracy
-  };
 }
 
 function sendMicResults(results) {
@@ -403,15 +560,16 @@ function sendMicResults(results) {
     console.log('Mic results sent:', resp);
     // Update UI with results
     if (results.intensity !== undefined) {
-      document.getElementById('audienceIntensity').textContent = results.intensity + '%';
+      const element = document.getElementById('audienceIntensity');
+      if (element) element.textContent = results.intensity + '%';
     }
     if (results.volume !== undefined) {
-      document.getElementById('audienceVolume').textContent = results.volume + ' dB';
+      const element = document.getElementById('audienceVolume');
+      if (element) element.textContent = results.volume + ' dB';
     }
     if (results.reactionAccuracy !== undefined) {
-      if (document.getElementById('reactionAccuracy')) {
-        document.getElementById('reactionAccuracy').textContent = results.reactionAccuracy + '%';
-      }
+      const element = document.getElementById('reactionAccuracy');
+      if (element) element.textContent = results.reactionAccuracy + '%';
     }
     // Update points instantly if returned
     if (resp.points !== undefined) {
@@ -428,7 +586,7 @@ function sendMicResults(results) {
 
 document.addEventListener('DOMContentLoaded', function () {
   // Transfer Points AJAX handler
-  const transferForm = document.querySelector('form[action="transfer_points.php"]');
+  const transferForm = document.querySelector('form[action="../api/transfer_points.php"]');
   if (transferForm) {
     transferForm.addEventListener('submit', function (e) {
       e.preventDefault();

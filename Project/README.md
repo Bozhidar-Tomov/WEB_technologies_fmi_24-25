@@ -155,3 +155,37 @@ The codebase has been cleaned up to remove:
 - Unnecessary user agent tracking
 - Optimized database queries in the admin panel
 - Improved performance in the CommandService
+
+## Portable Setup Instructions
+
+This project can be run on any machine with XAMPP installed without any configuration changes. Follow these steps:
+
+### Prerequisites
+- XAMPP installed (make sure PHP is in your system PATH)
+- MySQL database (included with XAMPP)
+
+### Running the Application
+
+#### Windows
+1. Clone or download this project to any directory on your machine
+2. Double-click the `run.bat` file
+3. Open your browser and navigate to http://localhost:8080
+
+#### Mac/Linux
+1. Clone or download this project to any directory on your machine
+2. Make the run script executable: `chmod +x run.sh`
+3. Execute the script: `./run.sh`
+4. Open your browser and navigate to http://localhost:8080
+
+### Database Setup
+1. Start MySQL from your XAMPP control panel
+2. Run the database setup script (from your browser): http://localhost:8080/config/init_db.php
+   - This will create the necessary database and tables
+
+### Stopping the Server
+- Press `Ctrl+C` in the terminal/command prompt window to stop the PHP server
+
+### Notes
+- The project will use port 8080 by default. If this port is already in use, modify the port number in the run script.
+- No Apache virtual hosts configuration is needed
+- You can run this project from any directory

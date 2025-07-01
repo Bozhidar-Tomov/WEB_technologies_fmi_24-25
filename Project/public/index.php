@@ -1,6 +1,43 @@
 <?php
 session_start();
 
+// Fix for PHP built-in server to handle static files
+if (php_sapi_name() == 'cli-server') {
+    $url = parse_url($_SERVER['REQUEST_URI']);
+    $file = __DIR__ . $url['path'];
+    
+    // Serve static files directly
+    if (is_file($file)) {
+        $extension = pathinfo($file, PATHINFO_EXTENSION);
+        switch ($extension) {
+            case 'css':
+                header('Content-Type: text/css');
+                break;
+            case 'js':
+                header('Content-Type: application/javascript');
+                // Add cache control headers to prevent caching issues with JavaScript
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                header('Pragma: no-cache');
+                header('Expires: 0');
+                break;
+            case 'png':
+            case 'jpg':
+            case 'jpeg':
+            case 'gif':
+                header('Content-Type: image/' . $extension);
+                break;
+            case 'mp3':
+                header('Content-Type: audio/mpeg');
+                break;
+            case 'wav':
+                header('Content-Type: audio/wav');
+                break;
+        }
+        readfile($file);
+        return true;
+    }
+}
+
 require_once __DIR__ . '/../routes/Router.php';
 
 $router = new Router();

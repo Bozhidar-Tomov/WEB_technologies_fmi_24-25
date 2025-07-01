@@ -9,7 +9,7 @@ function updateSlider(slider) {
     slider.style.setProperty('--range-progress', `${percentage}%`);
 }
 
-if (intensitySlider) {
+if (intensitySlider && intensityValue) {
   updateSlider(intensitySlider);
   intensitySlider.addEventListener('input', function(e) {
     intensityValue.textContent = e.target.value;
@@ -24,18 +24,27 @@ if (commandForm) {
       const submitButton = this.querySelector('button[type="submit"]');
       const feedbackElement = document.getElementById('commandFormFeedback');
       
-      feedbackElement.textContent = 'Sending command...';
-      feedbackElement.style.color = '#2b8a3e';
+      if (feedbackElement) {
+        feedbackElement.textContent = 'Sending command...';
+        feedbackElement.style.color = '#2b8a3e';
+      }
       
-      submitButton.disabled = true;
-      submitButton.textContent = 'Sending...';
+      if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = 'Sending...';
+      }
   });
 }
 
 // Function to update statistics section
 function updateStatistics() {
   fetch('../api/admin_stats.php')
-    .then(response => response.json())
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error ${response.status}`);
+      }
+      return response.json();
+    })
     .then(data => {
       if (data.error) {
         console.error('Error fetching statistics:', data.error);
@@ -51,8 +60,8 @@ function updateStatistics() {
       const statusDotElement = document.getElementById('statusDot');
       const statusTextElement = document.getElementById('statusText');
       if (statusDotElement && statusTextElement) {
-        statusDotElement.className = `status-dot ${data.sseStatus}`;
-        statusTextElement.textContent = data.statusText;
+        statusDotElement.className = `status-dot ${data.sseStatus || 'offline'}`;
+        statusTextElement.textContent = data.statusText || 'Status unknown';
       }
       
       // Update last command info if available
@@ -67,7 +76,7 @@ function updateStatistics() {
 function updateElement(id, value) {
   const element = document.getElementById(id);
   if (element) {
-    element.textContent = value;
+    element.textContent = value !== undefined ? value : '';
   }
 }
 
@@ -76,19 +85,24 @@ function updateLastCommandInfo(cmd) {
   const lastCommandInfoElement = document.getElementById('lastCommandInfo');
   if (!lastCommandInfoElement || !cmd) return;
   
-  const html = `
-    <strong>Last Command:</strong><br>
-    <b>Type:</b> ${cmd.type}<br>
-    <b>Intensity:</b> ${cmd.intensity}<br>
-    <b>Duration:</b> ${cmd.duration}s<br>
-    <b>Countdown:</b> ${cmd.countdown}s<br>
-    <b>Target Groups:</b> ${Array.isArray(cmd.targetGroups) ? cmd.targetGroups.join(', ') : (cmd.targetGroups || 'All')}<br>
-    <b>Target Tags:</b> ${Array.isArray(cmd.targetTags) ? cmd.targetTags.join(', ') : (cmd.targetTags || 'All')}<br>
-    <b>Target Gender:</b> ${cmd.targetGender || 'All'}<br>
-    <b>Message:</b> ${cmd.message || ''}<br>
-    <b>Sent at:</b> ${new Date(cmd.timestamp * 1000).toLocaleString()}
-  `;
-  lastCommandInfoElement.innerHTML = html;
+  try {
+    const html = `
+      <strong>Last Command:</strong><br>
+      <b>Type:</b> ${cmd.type || 'Unknown'}<br>
+      <b>Intensity:</b> ${cmd.intensity || '0'}<br>
+      <b>Duration:</b> ${cmd.duration || '0'}s<br>
+      <b>Countdown:</b> ${cmd.countdown || '0'}s<br>
+      <b>Target Groups:</b> ${Array.isArray(cmd.targetGroups) ? cmd.targetGroups.join(', ') : (cmd.targetGroups || 'All')}<br>
+      <b>Target Tags:</b> ${Array.isArray(cmd.targetTags) ? cmd.targetTags.join(', ') : (cmd.targetTags || 'All')}<br>
+      <b>Target Gender:</b> ${cmd.targetGender || 'All'}<br>
+      <b>Message:</b> ${cmd.message || ''}<br>
+      <b>Sent at:</b> ${cmd.timestamp ? new Date(cmd.timestamp * 1000).toLocaleString() : 'Unknown'}
+    `;
+    lastCommandInfoElement.innerHTML = html;
+  } catch (error) {
+    console.error('Error updating last command info:', error);
+    lastCommandInfoElement.innerHTML = '<strong>Error displaying last command</strong>';
+  }
 }
 
 // Update simulated audience button and slider
@@ -100,9 +114,14 @@ function updateSimAudienceBtnAndSlider() {
   if (!simBtn || !simBtnText) return;
   
   fetch('../api/toggle_sim_audience.php', { method: 'GET' })
-    .then(r => r.json())
+    .then(r => {
+      if (!r.ok) {
+        throw new Error(`HTTP error ${r.status}`);
+      }
+      return r.json();
+    })
     .then(resp => {
-      if (resp.success) {
+      if (resp && resp.success) {
         simBtnText.textContent = resp.enabled ? 'Disable' : 'Enable';
         if (sliderWrapper) sliderWrapper.style.display = resp.enabled ? '' : 'none';
       }
@@ -129,7 +148,12 @@ function setupSimAudienceToggle() {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: enable ? 'sim_audience=on' : ''
     })
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) {
+          throw new Error(`HTTP error ${r.status}`);
+        }
+        return r.json();
+      })
       .then(resp => {
         if (resp.success) {
           updateSimAudienceBtnAndSlider();
@@ -154,5 +178,12 @@ document.addEventListener('DOMContentLoaded', function () {
   
   // Start periodic updates of statistics
   updateStatistics(); // Initial update
-  setInterval(updateStatistics, 10000); // Update every 10 seconds
+  
+  // Use a safe interval to prevent memory leaks
+  let statsInterval = setInterval(updateStatistics, 10000); // Update every 10 seconds
+  
+  // Clean up interval if page is unloaded
+  window.addEventListener('beforeunload', function() {
+    clearInterval(statsInterval);
+  });
 });

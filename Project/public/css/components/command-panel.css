@@ -52,6 +52,19 @@
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
+.admin-message {
+    font-size: 1.3em;
+    font-style: italic;
+    color: #ffe066;
+    margin: 10px 0 0 0;
+    text-align: center;
+    width: 100%;
+    flex-grow: 1;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    border-top: 1px dashed rgba(255, 255, 255, 0.2);
+    padding-top: 10px;
+}
+
 .countdown {
     font-size: 1.6em;
     color: #fc5892;
@@ -93,7 +106,13 @@
     }
 
     .command-text {
-        margin-bottom: 10px;
+        margin-bottom: 5px;
+    }
+    
+    .admin-message {
+        margin: 8px 0;
+        padding-top: 8px;
+        font-size: 1.1em;
     }
 
     .countdown {

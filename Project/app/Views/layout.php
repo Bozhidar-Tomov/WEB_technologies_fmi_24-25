@@ -41,6 +41,9 @@
             <span class="authors">Bozhidar Tomov, Mira Velikova</span>
         </small>
     </footer>
+
+    <!-- Global app script -->
+    <script src="../js/app.js"></script>
 </body>
 
 </html>
