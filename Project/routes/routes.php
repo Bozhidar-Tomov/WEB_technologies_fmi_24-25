@@ -19,5 +19,5 @@ $router->get('/room', 'RoomController@showRoom');
 
 // SSE endpoint
 $router->get('/sse', function() {
-    require_once __DIR__ . '/../public/sse.php';
+    require_once BASE_PATH . '/public/sse.php';
 });

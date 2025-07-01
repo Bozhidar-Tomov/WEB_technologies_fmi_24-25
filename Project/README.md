@@ -8,7 +8,7 @@ CrowdPulse is a web application for directing and managing audience emotions (ap
 
 The project follows an MVC flow:
 
-- User visits: `http://localhost/Project/public/`
+- User visits: `http://localhost:8080/` (using PHP's built-in server)
 - `public/index.php` → front controller (routes all requests)
 - `app/Controllers/HomeController.php` → business logic
 - `app/Views/index.php` → HTML page (user sees this)
@@ -41,13 +41,11 @@ routes/
 └── Router.php          # Core routing logic that maps HTTP requests to controllers
 ```
 
-Apache server start point: `Project/public`
-
 ## Database Setup
 
 The application uses MySQL for data storage. Follow these steps to set up the database:
 
-1. Make sure you have XAMPP installed with MySQL service running
+1. Make sure you have MySQL service running
 2. Update database configuration in `config/database.php` if needed (default: localhost, root, no password)
 3. Run the database initialization script:
    ```
@@ -158,11 +156,11 @@ The codebase has been cleaned up to remove:
 
 ## Portable Setup Instructions
 
-This project can be run on any machine with XAMPP installed without any configuration changes. Follow these steps:
+This project is designed to be highly portable and can run on any system with PHP and MySQL installed without any special server configuration. It does not require Apache or .htaccess for routing.
 
 ### Prerequisites
-- XAMPP installed (make sure PHP is in your system PATH)
-- MySQL database (included with XAMPP)
+- PHP 7.4 or higher (with PDO extension enabled)
+- MySQL database
 
 ### Running the Application
 
@@ -177,70 +175,22 @@ This project can be run on any machine with XAMPP installed without any configur
 3. Execute the script: `./run.sh`
 4. Open your browser and navigate to http://localhost:8080
 
+#### Running on any PHP-supported server
+You can also deploy this application to any server with PHP support:
+1. Upload all files to your server
+2. Point your web server's document root to the `public` directory
+3. The application will handle routing internally without requiring .htaccess rules
+
 ### Database Setup
-1. Start MySQL from your XAMPP control panel
+1. Start your MySQL server
 2. Run the database setup script (from your browser): http://localhost:8080/config/init_db.php
    - This will create the necessary database and tables
 
-### Stopping the Server
+### Stopping the Development Server
 - Press `Ctrl+C` in the terminal/command prompt window to stop the PHP server
 
 ### Notes
-- The project will use port 8080 by default. If this port is already in use, modify the port number in the run script.
-- No Apache virtual hosts configuration is needed
+- The project will use port 8080 by default when using PHP's built-in server. If this port is already in use, modify the port number in the run script.
+- No Apache virtual hosts or .htaccess configuration is needed
 - You can run this project from any directory
-
-# Room App
-
-A web application for real-time audience response and command management.
-
-## Setup & Installation
-
-1. Clone the repository
-2. Configure the application settings in `config/app.php`
-3. Run the application using either:
-   - `run.bat` (Windows)
-   - `run.sh` (Linux/Mac)
-
-## Configuration
-
-The application uses a central configuration file located at `config/app.php`. This file contains all the settings needed to run the application, including:
-
-- Server settings (host, port)
-- Base path settings
-- Session configuration
-
-### Changing Server Port
-
-To change the port on which the application runs, update the `port` value in `config/app.php`:
-
-```php
-'server' => [
-    'port' => 8080,  // Change this to your desired port
-    'host' => 'localhost',
-],
-```
-
-### Base Path Configuration
-
-If your application is not running at the root of the domain, you can set a base path:
-
-```php
-'app' => [
-    'base_path' => '/myapp',  // This would make the app available at http://localhost:8080/myapp
-    'debug' => true,
-],
-```
-
-## Database Configuration
-
-Database configuration is located in `config/database.php`. See that file for database settings.
-
-## Running the Application
-
-After configuring the application, you can run it using:
-
-- Windows: Double-click the `run.bat` file
-- Linux/Mac: In terminal run `./run.sh` (you might need to make it executable with `chmod +x run.sh`)
-
-This will start a PHP development server at the configured host and port.
+- All routing is handled internally by the application

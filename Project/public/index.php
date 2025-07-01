@@ -1,8 +1,12 @@
 <?php
 session_start();
 
-// Load application configuration
-$config = require_once __DIR__ . '/../config/app.php';
+// Define base path constant for easier file referencing
+define('BASE_PATH', dirname(__DIR__));
+
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
 // Fix for PHP built-in server to handle static files
 if (php_sapi_name() == 'cli-server') {
@@ -18,10 +22,6 @@ if (php_sapi_name() == 'cli-server') {
                 break;
             case 'js':
                 header('Content-Type: application/javascript');
-                // Add cache control headers to prevent caching issues with JavaScript
-                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
-                header('Pragma: no-cache');
-                header('Expires: 0');
                 break;
             case 'png':
             case 'jpg':
@@ -41,19 +41,60 @@ if (php_sapi_name() == 'cli-server') {
     }
 }
 
-// Configure session with app settings
-if (isset($config['session'])) {
-    if (isset($config['session']['name'])) {
-        session_name($config['session']['name']);
-    }
-    if (isset($config['session']['lifetime'])) {
-        ini_set('session.gc_maxlifetime', $config['session']['lifetime']);
-    }
+// Simple and direct approach to routing
+// Extract the path from REQUEST_URI
+$requestUri = $_SERVER['REQUEST_URI'];
+
+// Debug information
+if (isset($_GET['debug'])) {
+    echo "<pre>";
+    echo "REQUEST_URI: " . $_SERVER['REQUEST_URI'] . "\n";
+    echo "SCRIPT_NAME: " . $_SERVER['SCRIPT_NAME'] . "\n";
+    echo "PHP_SELF: " . $_SERVER['PHP_SELF'] . "\n";
+    echo "</pre>";
 }
 
-require_once __DIR__ . '/../routes/Router.php';
+// Remove query string if present
+if (($pos = strpos($requestUri, '?')) !== false) {
+    $requestUri = substr($requestUri, 0, $pos);
+}
+
+// Simplify path extraction - just use the parsed path directly
+$path = parse_url($requestUri, PHP_URL_PATH);
+
+// In built-in server, remove any script path part
+if (php_sapi_name() == 'cli-server') {
+    $path = '/' . ltrim($path, '/');
+} 
+// When running in Apache/Nginx without proper configuration
+else {
+    // Get script name without filename (e.g., "/Project/public")
+    $scriptDir = dirname($_SERVER['SCRIPT_NAME']);
+    
+    // Only trim the script directory if it's at the beginning of the path
+    if ($scriptDir !== '/' && strpos($path, $scriptDir) === 0) {
+        $path = substr($path, strlen($scriptDir));
+    }
+    
+    // Ensure path starts with a slash
+    $path = '/' . ltrim($path, '/');
+}
+
+// This is now the path that our router should use
+$_SERVER['PATH_INFO'] = $path;
+
+// Debug information
+if (isset($_GET['debug'])) {
+    echo "<pre>";
+    echo "Final PATH_INFO: " . $_SERVER['PATH_INFO'] . "\n";
+    echo "</pre>";
+}
+
+// Load router
+require_once BASE_PATH . '/routes/Router.php';
 
 $router = new Router();
-require_once __DIR__ . '/../routes/routes.php';
+require_once BASE_PATH . '/routes/routes.php';
 
-$router->dispatch($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD']);
+// Use the extracted path info for routing
+$router->dispatch($_SERVER['PATH_INFO'], $_SERVER['REQUEST_METHOD']);

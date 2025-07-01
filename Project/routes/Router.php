@@ -6,15 +6,6 @@ class Router
         'GET' => [],
         'POST' => [],
     ];
-    
-    private $basePath = '';
-    private $config = [];
-
-    public function __construct()
-    {
-        $this->config = require_once __DIR__ . '/../config/app.php';
-        $this->basePath = $this->config['app']['base_path'] ?: $this->detectBasePath();
-    }
 
     public function get($uri, $action)
     {
@@ -28,30 +19,55 @@ class Router
 
     public function dispatch($requestUri, $requestMethod)
     {
-        // Remove the base path from the request URI
-        $uri = str_replace($this->basePath, '', $this->normalize(parse_url($requestUri, PHP_URL_PATH)));
+        $uri = $this->normalize($requestUri);
+        $method = strtoupper($requestMethod);
         
-        // If URI is empty after removing base path, treat it as root
-        if (empty($uri)) {
-            $uri = '/';
+        // Debug information if debug parameter is set
+        if (isset($_GET['debug'])) {
+            echo "<pre>";
+            echo "Router trying to match: {$method} {$uri}\n";
+            echo "Available routes:\n";
+            foreach ($this->routes[$method] as $route => $handler) {
+                echo "  {$method} {$route} => " . (is_string($handler) ? $handler : 'closure') . "\n";
+            }
+            echo "</pre>";
         }
         
-        $method = strtoupper($requestMethod);
         $action = $this->routes[$method][$uri] ?? null;
+        
         if (!$action) {
+            // Debug before showing 404
+            if (isset($_GET['debug'])) {
+                echo "<pre>";
+                echo "No route found for {$method} {$uri}\n";
+                echo "Showing 404 page\n";
+                echo "</pre>";
+            }
+            
             http_response_code(404);
-            require_once __DIR__ . '/../app/Views/404.php';
+            require_once BASE_PATH . '/app/Views/404.php';
             exit;
         }
+        
         if (is_callable($action)) {
             return $action();
         }
+        
         if (is_string($action)) {
             [$controller, $method] = explode('@', $action);
             $controllerClass = $controller;
+            
             if (!class_exists($controllerClass)) {
-                require_once __DIR__ . "/../app/Controllers/{$controller}.php";
+                require_once BASE_PATH . "/app/Controllers/{$controller}.php";
             }
+            
+            // Debug controller loading
+            if (isset($_GET['debug'])) {
+                echo "<pre>";
+                echo "Loading controller: {$controllerClass}::{$method}\n";
+                echo "</pre>";
+            }
+            
             $instance = new $controllerClass();
             return $instance->$method();
         }
@@ -60,22 +76,5 @@ class Router
     private function normalize($uri)
     {
         return rtrim($uri, '/') ?: '/';
-    }
-    
-    public function getBasePath()
-    {
-        return $this->basePath;
-    }
-    
-    public function getConfig()
-    {
-        return $this->config;
-    }
-    
-    private function detectBasePath()
-    {
-        $scriptName = dirname($_SERVER['SCRIPT_NAME']);
-        $basePath = $scriptName === '/' ? '' : $scriptName;
-        return $basePath;
     }
 }

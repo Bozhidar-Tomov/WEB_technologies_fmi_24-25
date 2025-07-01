@@ -1,21 +1,185 @@
-const intensitySlider = document.getElementById('intensity');
-const intensityValue = document.getElementById('intensityValue');
-let basePath = window.basePath || "";
+// Global variables
+let eventSource = null;
+let statusCheckTimer = null;
+let lastCommandData = null;
+let reconnectAttempts = 0;
+let reconnectTimer = null;
 
-function updateSlider(slider) {
-    if (!slider) return;
-    const value = slider.value;
-    const max = slider.max || 100;
-    const percentage = (value / max) * 100;
-    slider.style.setProperty('--range-progress', `${percentage}%`);
+document.addEventListener('DOMContentLoaded', function() {
+    // Connect to SSE server
+    connectSSE();
+    
+    // Setup the intensity slider display
+    const intensitySlider = document.getElementById('intensity');
+    const intensityValue = document.getElementById('intensityValue');
+    if (intensitySlider && intensityValue) {
+        intensitySlider.addEventListener('input', function() {
+            intensityValue.textContent = this.value;
+        });
+    }
+
+    // Setup simulated audience toggle button
+    const simAudienceBtn = document.getElementById('simAudienceBtn');
+    const simAudienceBtnText = document.getElementById('simAudienceBtnText');
+    if (simAudienceBtn) {
+        simAudienceBtn.addEventListener('click', function() {
+            toggleSimAudience(simAudienceBtnText.textContent === 'Enable');
+        });
+    }
+});
+
+// Fetch admin stats periodically
+function fetchAdminStats() {
+    fetch('/api/admin_stats.php')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('activeUsers').textContent = data.activeUsers || 0;
+            document.getElementById('currentVolume').textContent = data.currentVolume ? (data.currentVolume + ' dB') : '0 dB';
+            document.getElementById('responseRate').textContent = data.responseRate ? (data.responseRate + '%') : '0%';
+        })
+        .catch(error => {
+            console.error('Error fetching admin stats:', error);
+        });
 }
 
-if (intensitySlider && intensityValue) {
-  updateSlider(intensitySlider);
-  intensitySlider.addEventListener('input', function(e) {
-    intensityValue.textContent = e.target.value;
-    updateSlider(e.target);
-  });
+// Initialize stats refresh
+setInterval(fetchAdminStats, 5000);
+fetchAdminStats(); // Initial fetch
+
+// Function to establish SSE connection
+function connectSSE() {
+    if (eventSource) {
+        eventSource.close();
+    }
+
+    eventSource = new EventSource('/sse');
+
+    eventSource.onopen = function() {
+        console.log('SSE connection established');
+        reconnectAttempts = 0;
+        updateConnectionStatus('connected');
+    };
+
+    eventSource.onerror = function(e) {
+        console.error('SSE connection error', e);
+        updateConnectionStatus('disconnected');
+
+        eventSource.close();
+        eventSource = null;
+
+        if (reconnectAttempts < 10) {
+            const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
+            console.log(`Attempting to reconnect in ${delay/1000} seconds...`);
+
+            clearTimeout(reconnectTimer);
+            reconnectTimer = setTimeout(() => {
+                reconnectAttempts++;
+                connectSSE();
+            }, delay);
+        } else {
+            alert("Connection to server lost. Please refresh the page to reconnect.");
+        }
+    };
+
+    // Handle incoming events
+    eventSource.addEventListener('connected', function(event) {
+        console.log('Connected to SSE server', JSON.parse(event.data));
+    });
+
+    eventSource.addEventListener('command', function(event) {
+        const data = JSON.parse(event.data);
+        console.log('Command received:', data);
+        updateLastCommandInfo(data);
+    });
+}
+
+// Toggle simulated audience
+function toggleSimAudience(enable) {
+    const simAudienceBtn = document.getElementById('simAudienceBtn');
+    const simAudienceBtnText = document.getElementById('simAudienceBtnText');
+    const feedback = document.getElementById('simAudienceFeedback');
+    
+    if (simAudienceBtn) simAudienceBtn.disabled = true;
+    if (feedback) feedback.textContent = 'Processing...';
+
+    // First, check current status
+    fetch('/api/toggle_sim_audience.php', { method: 'GET' })
+        .then(response => response.json())
+        .then(data => {
+            const currentStatus = data.enabled;
+            const newStatus = enable; // We want to enable it if it's currently disabled
+            
+            if (currentStatus === newStatus) {
+                // Status already matches what we want
+                if (feedback) feedback.textContent = `Simulated audience is already ${newStatus ? 'enabled' : 'disabled'}.`;
+                if (simAudienceBtn) simAudienceBtn.disabled = false;
+                return;
+            }
+            
+            // Toggle the status
+            fetch('/api/toggle_sim_audience.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ enable: newStatus }),
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (feedback) feedback.textContent = result.message;
+                if (simAudienceBtnText) {
+                    simAudienceBtnText.textContent = result.enabled ? 'Disable' : 'Enable';
+                }
+                
+                // Show/hide intensity slider based on status
+                const intensityWrapper = document.getElementById('intensitySliderWrapper');
+                if (intensityWrapper) {
+                    intensityWrapper.style.display = result.enabled ? 'block' : 'none';
+                }
+            })
+            .catch(error => {
+                console.error('Error toggling simulated audience:', error);
+                if (feedback) feedback.textContent = 'An error occurred while toggling simulated audience.';
+            })
+            .finally(() => {
+                if (simAudienceBtn) simAudienceBtn.disabled = false;
+            });
+        })
+        .catch(error => {
+            console.error('Error checking simulated audience status:', error);
+            if (feedback) feedback.textContent = 'Failed to check current status.';
+            if (simAudienceBtn) simAudienceBtn.disabled = false;
+        });
+}
+
+// Update connection status indicator
+function updateConnectionStatus(status) {
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+    
+    if (statusDot && statusText) {
+        if (status === 'connected') {
+            statusDot.style.backgroundColor = '#2b8a3e';
+            statusText.textContent = 'SSE Server: Connected';
+        } else {
+            statusDot.style.backgroundColor = '#c92a2a';
+            statusText.textContent = 'SSE Server: Disconnected';
+        }
+    }
+}
+
+// Update last command information
+function updateLastCommandInfo(command) {
+    const lastCommandInfo = document.getElementById('lastCommandInfo');
+    if (lastCommandInfo) {
+        const time = new Date().toLocaleTimeString();
+        lastCommandInfo.innerHTML = `
+            <div><strong>Last Command:</strong> ${command.type}</div>
+            <div><strong>Time:</strong> ${time}</div>
+            <div><strong>Duration:</strong> ${command.duration || 0}s</div>
+            <div><strong>Target Groups:</strong> ${command.targetGroups && command.targetGroups.length ? command.targetGroups.join(', ') : 'All'}</div>
+        `;
+    }
 }
 
 // Add form submission handler
@@ -25,27 +189,18 @@ if (commandForm) {
       const submitButton = this.querySelector('button[type="submit"]');
       const feedbackElement = document.getElementById('commandFormFeedback');
       
-      if (feedbackElement) {
-        feedbackElement.textContent = 'Sending command...';
-        feedbackElement.style.color = '#2b8a3e';
-      }
+      feedbackElement.textContent = 'Sending command...';
+      feedbackElement.style.color = '#2b8a3e';
       
-      if (submitButton) {
-        submitButton.disabled = true;
-        submitButton.textContent = 'Sending...';
-      }
+      submitButton.disabled = true;
+      submitButton.textContent = 'Sending...';
   });
 }
 
 // Function to update statistics section
 function updateStatistics() {
-  fetch(basePath + '/api/admin_stats.php')
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`HTTP error ${response.status}`);
-      }
-      return response.json();
-    })
+  fetch('/api/admin_stats.php')
+    .then(response => response.json())
     .then(data => {
       if (data.error) {
         console.error('Error fetching statistics:', data.error);
@@ -61,8 +216,8 @@ function updateStatistics() {
       const statusDotElement = document.getElementById('statusDot');
       const statusTextElement = document.getElementById('statusText');
       if (statusDotElement && statusTextElement) {
-        statusDotElement.className = `status-dot ${data.sseStatus || 'offline'}`;
-        statusTextElement.textContent = data.statusText || 'Status unknown';
+        statusDotElement.className = `status-dot ${data.sseStatus}`;
+        statusTextElement.textContent = data.statusText;
       }
       
       // Update last command info if available
@@ -77,32 +232,7 @@ function updateStatistics() {
 function updateElement(id, value) {
   const element = document.getElementById(id);
   if (element) {
-    element.textContent = value !== undefined ? value : '';
-  }
-}
-
-// Update last command information
-function updateLastCommandInfo(cmd) {
-  const lastCommandInfoElement = document.getElementById('lastCommandInfo');
-  if (!lastCommandInfoElement || !cmd) return;
-  
-  try {
-    const html = `
-      <strong>Last Command:</strong><br>
-      <b>Type:</b> ${cmd.type || 'Unknown'}<br>
-      <b>Intensity:</b> ${cmd.intensity || '0'}<br>
-      <b>Duration:</b> ${cmd.duration || '0'}s<br>
-      <b>Countdown:</b> ${cmd.countdown || '0'}s<br>
-      <b>Target Groups:</b> ${Array.isArray(cmd.targetGroups) ? cmd.targetGroups.join(', ') : (cmd.targetGroups || 'All')}<br>
-      <b>Target Tags:</b> ${Array.isArray(cmd.targetTags) ? cmd.targetTags.join(', ') : (cmd.targetTags || 'All')}<br>
-      <b>Target Gender:</b> ${cmd.targetGender || 'All'}<br>
-      <b>Message:</b> ${cmd.message || ''}<br>
-      <b>Sent at:</b> ${cmd.timestamp ? new Date(cmd.timestamp * 1000).toLocaleString() : 'Unknown'}
-    `;
-    lastCommandInfoElement.innerHTML = html;
-  } catch (error) {
-    console.error('Error updating last command info:', error);
-    lastCommandInfoElement.innerHTML = '<strong>Error displaying last command</strong>';
+    element.textContent = value;
   }
 }
 
@@ -114,15 +244,10 @@ function updateSimAudienceBtnAndSlider() {
   
   if (!simBtn || !simBtnText) return;
   
-  fetch(basePath + '/api/toggle_sim_audience.php', { method: 'GET' })
-    .then(r => {
-      if (!r.ok) {
-        throw new Error(`HTTP error ${r.status}`);
-      }
-      return r.json();
-    })
+  fetch('/api/toggle_sim_audience.php', { method: 'GET' })
+    .then(r => r.json())
     .then(resp => {
-      if (resp && resp.success) {
+      if (resp.success) {
         simBtnText.textContent = resp.enabled ? 'Disable' : 'Enable';
         if (sliderWrapper) sliderWrapper.style.display = resp.enabled ? '' : 'none';
       }
@@ -144,17 +269,12 @@ function setupSimAudienceToggle() {
     simFeedback.textContent = '';
     const enable = simBtnText.textContent.trim().toLowerCase() === 'enable';
     
-    fetch(basePath + '/api/toggle_sim_audience.php', {
+    fetch('/api/toggle_sim_audience.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: enable ? 'sim_audience=on' : ''
     })
-      .then(r => {
-        if (!r.ok) {
-          throw new Error(`HTTP error ${r.status}`);
-        }
-        return r.json();
-      })
+      .then(r => r.json())
       .then(resp => {
         if (resp.success) {
           updateSimAudienceBtnAndSlider();
@@ -179,12 +299,5 @@ document.addEventListener('DOMContentLoaded', function () {
   
   // Start periodic updates of statistics
   updateStatistics(); // Initial update
-  
-  // Use a safe interval to prevent memory leaks
-  let statsInterval = setInterval(updateStatistics, 10000); // Update every 10 seconds
-  
-  // Clean up interval if page is unloaded
-  window.addEventListener('beforeunload', function() {
-    clearInterval(statsInterval);
-  });
+  setInterval(updateStatistics, 10000); // Update every 10 seconds
 });
