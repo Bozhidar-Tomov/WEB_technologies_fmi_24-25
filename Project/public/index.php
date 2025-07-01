@@ -7,9 +7,9 @@ if (php_sapi_name() == 'cli-server') {
     $file = __DIR__ . $url['path'];
     $pathInfo = pathinfo($file);
     
-    // Special handling for setup page
-    if ($url['path'] === '/setup.php') {
-        require_once __DIR__ . '/setup.php';
+    // Special handling for setup pages
+    if ($url['path'] === '/setup.php' || $url['path'] === '/setup_config.php') {
+        require_once __DIR__ . $url['path'];
         return true;
     }
     

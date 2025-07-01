@@ -184,9 +184,13 @@ This project can be run on any machine with XAMPP installed without any configur
 ### Database Setup
 1. Make sure MySQL is running from your XAMPP control panel
 2. After starting the server with the script above, visit: http://localhost:8080/setup.php
-3. Click "Test Connection" to verify your database connection
-4. Click "Initialize Database" to set up the database and tables
-5. Once complete, return to http://localhost:8080 to start using the application
+3. If you see a "Access denied for user" error:
+   - Click on "Configure Database" 
+   - Update your MySQL credentials (try using "127.0.0.1" instead of "localhost")
+   - Save the configuration
+4. Click "Test Connection" to verify your database connection
+5. Click "Initialize Database" to set up the database and tables
+6. Once complete, return to http://localhost:8080 to start using the application
 
 ### Troubleshooting
 
@@ -201,10 +205,12 @@ If you get an error that PHP is not found:
 
 #### Database Connection Issues
 1. Ensure MySQL is running in your XAMPP control panel
-2. Default credentials are:
-   - Username: root
-   - Password: (empty)
-   - If you've changed these, edit `config/database.php` to match your settings
+2. If you see "Access denied for user root@localhost" errors:
+   - Navigate to http://localhost:8080/setup_config.php
+   - Try changing the host from "localhost" to "127.0.0.1"
+   - Enter your MySQL root password if you've set one
+   - If using a fresh XAMPP install, try changing the username to "root" and leaving the password empty
+   - Some XAMPP installations use "root" with password "root" or "password"
 
 #### Port Already in Use
 If port 8080 is already in use:
