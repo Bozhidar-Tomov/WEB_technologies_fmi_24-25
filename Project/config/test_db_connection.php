@@ -7,9 +7,12 @@
  * Use this to diagnose connection problems.
  */
 
+// Check if already in a web page context (when included from setup.php)
+$inPageContext = isset($tool);
+
 // Check if running in browser or CLI
 $isBrowser = php_sapi_name() !== 'cli';
-if ($isBrowser) {
+if ($isBrowser && !$inPageContext) {
     echo "<!DOCTYPE html>
     <html>
     <head>
@@ -32,8 +35,8 @@ if ($isBrowser) {
             <hr>";
 }
 
-function output($message, $type = 'info') {
-    global $isBrowser;
+function test_output($message, $type = 'info') {
+    global $isBrowser, $inPageContext;
     
     if ($isBrowser) {
         $class = $type === 'error' ? 'error' : ($type === 'success' ? 'success' : ($type === 'warning' ? 'warning' : ''));
@@ -45,15 +48,15 @@ function output($message, $type = 'info') {
 
 // Load configuration
 if (file_exists(__DIR__ . '/database.php')) {
-    output("✓ Database configuration file found", 'success');
+    test_output("✓ Database configuration file found", 'success');
     $config = require __DIR__ . '/database.php';
 } else {
-    output("✗ Database configuration file not found at " . __DIR__ . '/database.php', 'error');
+    test_output("✗ Database configuration file not found at " . __DIR__ . '/database.php', 'error');
     exit(1);
 }
 
 // Check MySQL service
-output("Testing MySQL connection to {$config['host']}:{$config['port']}...");
+test_output("Testing MySQL connection to {$config['host']}:{$config['port']}...");
 
 // Test connection without database
 try {
@@ -68,15 +71,15 @@ try {
             PDO::ATTR_EMULATE_PREPARES => false,
         ]
     );
-    output("✓ Successfully connected to MySQL server", 'success');
+    test_output("✓ Successfully connected to MySQL server", 'success');
     
     // Check if the database exists
-    output("Checking if database '{$config['database']}' exists...");
+    test_output("Checking if database '{$config['database']}' exists...");
     $stmt = $pdo->query("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '{$config['database']}'");
     $database_exists = $stmt->fetchColumn();
     
     if ($database_exists) {
-        output("✓ Database '{$config['database']}' exists", 'success');
+        test_output("✓ Database '{$config['database']}' exists", 'success');
         
         // Connect to the specific database
         try {
@@ -91,7 +94,7 @@ try {
                     PDO::ATTR_EMULATE_PREPARES => false,
                 ]
             );
-            output("✓ Successfully connected to '{$config['database']}' database", 'success');
+            test_output("✓ Successfully connected to '{$config['database']}' database", 'success');
             
             // Check if essential tables exist
             $tables_to_check = ['users', 'commands', 'settings'];
@@ -105,49 +108,59 @@ try {
             }
             
             if (empty($missing_tables)) {
-                output("✓ All essential tables found", 'success');
+                test_output("✓ All essential tables found", 'success');
                 
                 // Test a simple query
                 try {
                     $stmt = $db_pdo->query("SELECT setting_value FROM settings WHERE setting_key = 'sim_audience_on' LIMIT 1");
                     $value = $stmt->fetchColumn();
-                    output("✓ Successfully ran a test query", 'success');
+                    test_output("✓ Successfully ran a test query", 'success');
                 } catch (PDOException $e) {
-                    output("✗ Error running test query: " . $e->getMessage(), 'error');
+                    test_output("✗ Error running test query: " . $e->getMessage(), 'error');
                 }
                 
             } else {
-                output("✗ Some essential tables are missing: " . implode(", ", $missing_tables), 'warning');
-                output("You need to run the database initialization script: <a href='init_db.php'>Initialize Database</a>", 'warning');
+                test_output("✗ Some essential tables are missing: " . implode(", ", $missing_tables), 'warning');
+                
+                if ($inPageContext) {
+                    test_output("You need to run the database initialization script: <a href='setup.php?tool=init'>Initialize Database</a>", 'warning');
+                } else {
+                    test_output("You need to run the database initialization script: <a href='init_db.php'>Initialize Database</a>", 'warning');
+                }
             }
             
         } catch (PDOException $e) {
-            output("✗ Error connecting to the specific database: " . $e->getMessage(), 'error');
+            test_output("✗ Error connecting to the specific database: " . $e->getMessage(), 'error');
         }
         
     } else {
-        output("✗ Database '{$config['database']}' does not exist", 'warning');
-        output("You need to run the database initialization script: <a href='init_db.php'>Initialize Database</a>", 'warning');
+        test_output("✗ Database '{$config['database']}' does not exist", 'warning');
+        
+        if ($inPageContext) {
+            test_output("You need to run the database initialization script: <a href='setup.php?tool=init'>Initialize Database</a>", 'warning');
+        } else {
+            test_output("You need to run the database initialization script: <a href='init_db.php'>Initialize Database</a>", 'warning');
+        }
     }
     
 } catch (PDOException $e) {
-    output("✗ MySQL connection failed: " . $e->getMessage(), 'error');
+    test_output("✗ MySQL connection failed: " . $e->getMessage(), 'error');
     
     // Check if this is a common error and provide suggestions
     if (strpos($e->getMessage(), "Connection refused") !== false) {
-        output("Possible causes:", 'warning');
-        output("- MySQL service is not running", 'warning');
-        output("- MySQL is running on a different port", 'warning');
-        output("Solution: Make sure MySQL is started from your XAMPP control panel", 'warning');
+        test_output("Possible causes:", 'warning');
+        test_output("- MySQL service is not running", 'warning');
+        test_output("- MySQL is running on a different port", 'warning');
+        test_output("Solution: Make sure MySQL is started from your XAMPP control panel", 'warning');
     }
     else if (strpos($e->getMessage(), "Access denied") !== false) {
-        output("Possible causes:", 'warning');
-        output("- Wrong username or password", 'warning');
-        output("Solution: Check your database credentials in config/database.php", 'warning');
+        test_output("Possible causes:", 'warning');
+        test_output("- Wrong username or password", 'warning');
+        test_output("Solution: Check your database credentials in config/database.php", 'warning');
     }
 }
 
-if ($isBrowser) {
+if ($isBrowser && !$inPageContext) {
     echo "<div class='next-steps'>";
     echo "<h2>Next Steps:</h2>";
     echo "<ul>";
@@ -157,6 +170,15 @@ if ($isBrowser) {
     echo "</ul>";
     echo "</div>";
     echo "</div></body></html>";
+} else if ($isBrowser && $inPageContext) {
+    echo "<div class='next-steps'>";
+    echo "<h2>Next Steps:</h2>";
+    echo "<ul>";
+    echo "<li>If all tests passed, you can <a href='/'>return to the application</a>.</li>";
+    echo "<li>If you see warnings about missing database or tables, <a href='setup.php?tool=init'>run the initialization script</a>.</li>";
+    echo "<li>If there are connection errors, check that MySQL is running and the credentials are correct.</li>";
+    echo "</ul>";
+    echo "</div>";
 } else {
     echo "\nTest completed.\n";
 } 

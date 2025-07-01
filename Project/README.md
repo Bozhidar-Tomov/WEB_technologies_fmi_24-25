@@ -183,9 +183,10 @@ This project can be run on any machine with XAMPP installed without any configur
 
 ### Database Setup
 1. Make sure MySQL is running from your XAMPP control panel
-2. After starting the server with the script above, visit: http://localhost:8080/config/init_db.php
-3. Follow the instructions on the database setup page
-4. Once complete, return to http://localhost:8080 to start using the application
+2. After starting the server with the script above, visit: http://localhost:8080/setup.php
+3. Click "Test Connection" to verify your database connection
+4. Click "Initialize Database" to set up the database and tables
+5. Once complete, return to http://localhost:8080 to start using the application
 
 ### Troubleshooting
 

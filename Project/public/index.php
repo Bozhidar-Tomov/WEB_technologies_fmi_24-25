@@ -5,6 +5,30 @@ session_start();
 if (php_sapi_name() == 'cli-server') {
     $url = parse_url($_SERVER['REQUEST_URI']);
     $file = __DIR__ . $url['path'];
+    $pathInfo = pathinfo($file);
+    
+    // Special handling for setup page
+    if ($url['path'] === '/setup.php') {
+        require_once __DIR__ . '/setup.php';
+        return true;
+    }
+    
+    // Handle config files specially when directly accessed
+    if (strpos($url['path'], '/config/') === 0) {
+        // Try to serve from project root
+        $configFile = dirname(__DIR__) . $url['path'];
+        if (file_exists($configFile) && is_file($configFile)) {
+            // For PHP files, include them
+            if (pathinfo($configFile, PATHINFO_EXTENSION) === 'php') {
+                include $configFile;
+                return true;
+            }
+            
+            // For other files, serve them directly
+            readfile($configFile);
+            return true;
+        }
+    }
     
     // Serve static files directly
     if (is_file($file)) {

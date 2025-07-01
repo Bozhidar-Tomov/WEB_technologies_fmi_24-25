@@ -7,9 +7,12 @@
  * Run this script once to set up the database structure.
  */
 
+// Check if already in a web page context (when included from setup.php)
+$inPageContext = isset($tool);
+
 // Check if running in browser or CLI
 $isBrowser = php_sapi_name() !== 'cli';
-if ($isBrowser) {
+if ($isBrowser && !$inPageContext) {
     echo "<!DOCTYPE html>
     <html>
     <head>
@@ -30,8 +33,8 @@ if ($isBrowser) {
             <hr>";
 }
 
-function output($message, $type = 'info') {
-    global $isBrowser;
+function db_output($message, $type = 'info') {
+    global $isBrowser, $inPageContext;
     
     if ($isBrowser) {
         $class = $type === 'error' ? 'error' : ($type === 'success' ? 'success' : '');
@@ -62,15 +65,15 @@ try {
         ]
     );
     
-    output("Connected to MySQL server successfully.", 'success');
+    db_output("Connected to MySQL server successfully.", 'success');
     
     // Create database if it doesn't exist
     $pdo->exec("CREATE DATABASE IF NOT EXISTS `$dbName` CHARACTER SET $charset COLLATE $collation");
-    output("Database '$dbName' created or already exists.", 'success');
+    db_output("Database '$dbName' created or already exists.", 'success');
     
     // Select the database
     $pdo->exec("USE `$dbName`");
-    output("Using database '$dbName'.", 'success');
+    db_output("Using database '$dbName'.", 'success');
     
     // Execute SQL schema
     $sql = file_get_contents(__DIR__ . '/schema.sql');
@@ -83,14 +86,23 @@ try {
         }
     }
     
-    output("Database schema created successfully.", 'success');
-    output("Database initialization completed successfully!", 'success');
+    db_output("Database schema created successfully.", 'success');
+    db_output("Database initialization completed successfully!", 'success');
     
     if ($isBrowser) {
         echo "<div class='next-steps'>";
         echo "<h2>Next Steps:</h2>";
-        echo "<p>1. You can now close this page and return to your application.</p>";
-        echo "<p>2. Go to <a href='../'><strong>Homepage</strong></a> to start using the application.</p>";
+        
+        if ($inPageContext) {
+            // When included from setup.php
+            echo "<p>1. You can now return to the application.</p>";
+            echo "<p>2. Go to <a href='/'><strong>Homepage</strong></a> to start using the application.</p>";
+        } else {
+            // When accessed directly
+            echo "<p>1. You can now close this page and return to your application.</p>";
+            echo "<p>2. Go to <a href='../'><strong>Homepage</strong></a> to start using the application.</p>";
+        }
+        
         echo "</div>";
     } else {
         echo "\nNext steps:\n";
@@ -98,9 +110,9 @@ try {
     }
     
 } catch (PDOException $e) {
-    output("Database initialization failed: " . $e->getMessage(), 'error');
+    db_output("Database initialization failed: " . $e->getMessage(), 'error');
 }
 
-if ($isBrowser) {
+if ($isBrowser && !$inPageContext) {
     echo "</div></body></html>";
 } 
