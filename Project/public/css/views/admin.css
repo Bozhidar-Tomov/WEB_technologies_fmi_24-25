@@ -1,6 +1,8 @@
 @import url('../components/panel.css');
 @import url('../components/command-panel.css');
+@import url('../components/btn-common.css');
 @import url('../components/btn-primary.css');
+@import url('../components/btn-secondary.css');
 @import url('../components/form-fields.css');
 @import url('../components/form-feedback.css');
 @import url('../components/status-messages.css');
@@ -34,6 +36,25 @@
     justify-content: center;
     width: 100%;
     max-width: 900px;
+}
+
+/* Simulated Audience Control and Button styling */
+#simAudienceControl {
+    margin-bottom: 1em;
+    display: flex;
+    align-items: center;
+    gap: 1em;
+}
+
+#simAudienceBtn {
+    width: auto;
+    margin-top: 0;
+    padding: 10px 20px;
+}
+
+#simAudienceFeedback {
+    margin-bottom: 1em;
+    display: block;
 }
 
 #intensityValue {

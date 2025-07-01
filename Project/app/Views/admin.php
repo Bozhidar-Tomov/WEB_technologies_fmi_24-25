@@ -1,6 +1,4 @@
 <?php
-header("Refresh: 10");
-
 require_once __DIR__ . '/../Database/Database.php';
 use App\Database\Database;
 
@@ -42,7 +40,7 @@ try {
             ?>
 
             <h2 class="panel-title">Send Command</h2>
-            <div id="simAudienceControl" style="margin-bottom:1em; display: flex; align-items: center; gap: 1em;">
+            <div id="simAudienceControl">
                 <button id="simAudienceBtn" type="button" class="btn btn-secondary">
                     <span id="simAudienceBtnText"><?php echo $simAudienceEnabled ? 'Disable' : 'Enable'; ?></span> Simulated Audience
                 </button>
@@ -103,101 +101,25 @@ try {
             <h2 class="panel-title">Live Feedback</h2>
             <div class="connection-status">
                 <div class="status-indicator" id="connectionStatus">
-                    <?php
-                    require_once __DIR__ . '/../Services/CommandService.php';
-                    use App\Services\CommandService;
-                    
-                    $activeUsers = (new CommandService())->getActiveUserCount();
-                    $sseStatus = $activeUsers > 0 ? 'online' : 'offline';
-                    $statusText = $activeUsers > 0 ? 'SSE Server: Online' : 'SSE Server: Offline';
-                    ?>
-                    <span class="status-dot <?= $sseStatus ?>" id="statusDot"></span>
-                    <span class="status-text" id="statusText"><?= $statusText ?></span>
+                    <span class="status-dot" id="statusDot"></span>
+                    <span class="status-text" id="statusText">SSE Server: Checking status...</span>
                 </div>
                 <div class="last-command" id="lastCommandInfo">
-                    <?php if (!empty($_SESSION['last_command'])): 
-                        $cmd = $_SESSION['last_command'];
-                    ?>
-                        <strong>Last Command:</strong><br>
-                        <b>Type:</b> <?= htmlspecialchars($cmd['type']) ?><br>
-                        <b>Intensity:</b> <?= htmlspecialchars($cmd['intensity']) ?><br>
-                        <b>Duration:</b> <?= htmlspecialchars($cmd['duration']) ?>s<br>
-                        <b>Countdown:</b> <?= htmlspecialchars($cmd['countdown']) ?>s<br>
-                        <b>Target Groups:</b> <?= htmlspecialchars(is_array($cmd['targetGroups'] ?? null) ? implode(', ', $cmd['targetGroups']) : ($cmd['targetGroups'] ?? 'All')) ?><br>
-                        <b>Target Tags:</b> <?= htmlspecialchars(is_array($cmd['targetTags'] ?? null) ? implode(', ', $cmd['targetTags']) : ($cmd['targetTags'] ?? 'All')) ?><br>
-                        <b>Target Gender:</b> <?= htmlspecialchars($cmd['targetGender'] ?? 'All') ?><br>
-                        <b>Message:</b> <?= htmlspecialchars($cmd['message']) ?><br>
-                        <b>Sent at:</b> <?= date('Y-m-d H:i:s', $cmd['timestamp']) ?>
-                    <?php else: ?>
-                        No commands sent yet
-                    <?php endif; ?>
-                    <?php unset($_SESSION['last_command']); ?>
+                    No commands sent yet
                 </div>
             </div>
             <div class="metrics">
                 <div class="metric">
                     <label>Active Users:</label>
-                    <span id="activeUsers"><?= $activeUsers ?></span>
+                    <span id="activeUsers">0</span>
                 </div>
                 <div class="metric">
                     <label>Current Volume:</label>
-                    <span id="currentVolume"><?php
-                        // Calculate average volume for current command
-                        $avgVolume = 0;
-                        $cmdId = null;
-                        
-                        try {
-                            // Get active command ID
-                            $activeCmd = (new CommandService())->getActiveCommand();
-                            $cmdId = $activeCmd['id'] ?? null;
-                            
-                            if ($cmdId) {
-                                // Get mic results for active command
-                                $stmt = $db->query(
-                                    "SELECT AVG(volume) as avg_volume FROM mic_results WHERE command_id = ?",
-                                    [$cmdId]
-                                );
-                                $result = $stmt->fetch(PDO::FETCH_ASSOC);
-                                
-                                if ($result && isset($result['avg_volume'])) {
-                                    $avgVolume = round($result['avg_volume']);
-                                }
-                            }
-                        } catch (PDOException $e) {
-                            // Handle error silently
-                        }
-                        
-                        echo $avgVolume . ' dB';
-                    ?></span>
+                    <span id="currentVolume">0 dB</span>
                 </div>
                 <div class="metric">
                     <label>Response Rate:</label>
-                    <span id="responseRate"><?php
-                        $rate = 0;
-                        $numResponded = 0;
-                        $numActive = $activeUsers;
-                        
-                        try {
-                            if ($cmdId && $numActive > 0) {
-                                // Count users who responded to the active command
-                                $stmt = $db->query(
-                                    "SELECT COUNT(DISTINCT user_id) as count FROM mic_results 
-                                     WHERE command_id = ? AND reaction_accuracy >= 15",
-                                    [$cmdId]
-                                );
-                                $result = $stmt->fetch(PDO::FETCH_ASSOC);
-                                
-                                if ($result) {
-                                    $numResponded = (int)$result['count'];
-                                    $rate = round(($numResponded / $numActive) * 100);
-                                }
-                            }
-                        } catch (PDOException $e) {
-                            // Handle error silently
-                        }
-                        
-                        echo $rate . '%';
-                    ?></span>
+                    <span id="responseRate">0%</span>
                 </div>
             </div>
         </section>
