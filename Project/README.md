@@ -161,31 +161,59 @@ The codebase has been cleaned up to remove:
 This project can be run on any machine with XAMPP installed without any configuration changes. Follow these steps:
 
 ### Prerequisites
-- XAMPP installed (make sure PHP is in your system PATH)
-- MySQL database (included with XAMPP)
+- XAMPP installed with PHP 7.4+ and MySQL
+- PHP must be in your system PATH (Important for the scripts to work)
+- MySQL server must be running (start it from XAMPP control panel)
 
 ### Running the Application
 
 #### Windows
 1. Clone or download this project to any directory on your machine
-2. Double-click the `run.bat` file
-3. Open your browser and navigate to http://localhost:8080
+2. Start MySQL from your XAMPP control panel
+3. Double-click the `run.bat` file
+   - If you get an error about PHP not being found, see troubleshooting below
+4. Open your browser and navigate to http://localhost:8080
 
 #### Mac/Linux
 1. Clone or download this project to any directory on your machine
-2. Make the run script executable: `chmod +x run.sh`
-3. Execute the script: `./run.sh`
-4. Open your browser and navigate to http://localhost:8080
+2. Start MySQL from your XAMPP control panel
+3. Make the run script executable: `chmod +x run.sh`
+4. Execute the script: `./run.sh`
+5. Open your browser and navigate to http://localhost:8080
 
 ### Database Setup
-1. Start MySQL from your XAMPP control panel
-2. Run the database setup script (from your browser): http://localhost:8080/config/init_db.php
-   - This will create the necessary database and tables
+1. Make sure MySQL is running from your XAMPP control panel
+2. After starting the server with the script above, visit: http://localhost:8080/config/init_db.php
+3. Follow the instructions on the database setup page
+4. Once complete, return to http://localhost:8080 to start using the application
+
+### Troubleshooting
+
+#### PHP Not Found
+If you get an error that PHP is not found:
+
+1. Make sure XAMPP is installed
+2. Add PHP to your system PATH:
+   - Windows: Add `C:\xampp\php` to your PATH environment variable
+   - Mac/Linux: Run `export PATH=$PATH:/Applications/XAMPP/xamppfiles/bin` (or your XAMPP location)
+3. Verify by running `php -v` in a new command prompt/terminal
+
+#### Database Connection Issues
+1. Ensure MySQL is running in your XAMPP control panel
+2. Default credentials are:
+   - Username: root
+   - Password: (empty)
+   - If you've changed these, edit `config/database.php` to match your settings
+
+#### Port Already in Use
+If port 8080 is already in use:
+1. Edit `run.bat` or `run.sh` to change the port number (e.g., to 8081)
+2. Update the URL in your browser accordingly
 
 ### Stopping the Server
 - Press `Ctrl+C` in the terminal/command prompt window to stop the PHP server
 
 ### Notes
-- The project will use port 8080 by default. If this port is already in use, modify the port number in the run script.
+- The project will use port 8080 by default
 - No Apache virtual hosts configuration is needed
 - You can run this project from any directory

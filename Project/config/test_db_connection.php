@@ -3,58 +3,160 @@
 /**
  * Database Connection Test Script
  * 
- * This script tests the connection to the MySQL database.
- * Run this script to verify that your database configuration is correct.
+ * This script tests the connection to the MySQL server and reports any issues.
+ * Use this to diagnose connection problems.
  */
 
-require_once __DIR__ . '/../app/Database/Database.php';
-use App\Database\Database;
+// Check if running in browser or CLI
+$isBrowser = php_sapi_name() !== 'cli';
+if ($isBrowser) {
+    echo "<!DOCTYPE html>
+    <html>
+    <head>
+        <title>Database Connection Test</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+            .container { max-width: 800px; margin: 0 auto; background: #f5f5f5; padding: 20px; border-radius: 5px; }
+            .success { color: green; }
+            .error { color: red; }
+            .warning { color: orange; }
+            h1 { color: #333; }
+            hr { border: 0; border-top: 1px solid #ddd; margin: 20px 0; }
+            pre { background: #f0f0f0; padding: 10px; border-radius: 3px; overflow: auto; }
+            .next-steps { background: #e9f7ef; padding: 15px; border-radius: 5px; margin-top: 20px; }
+        </style>
+    </head>
+    <body>
+        <div class='container'>
+            <h1>Database Connection Test</h1>
+            <hr>";
+}
 
+function output($message, $type = 'info') {
+    global $isBrowser;
+    
+    if ($isBrowser) {
+        $class = $type === 'error' ? 'error' : ($type === 'success' ? 'success' : ($type === 'warning' ? 'warning' : ''));
+        echo "<p" . ($class ? " class='$class'" : "") . ">$message</p>";
+    } else {
+        echo $message . "\n";
+    }
+}
+
+// Load configuration
+if (file_exists(__DIR__ . '/database.php')) {
+    output("✓ Database configuration file found", 'success');
+    $config = require __DIR__ . '/database.php';
+} else {
+    output("✗ Database configuration file not found at " . __DIR__ . '/database.php', 'error');
+    exit(1);
+}
+
+// Check MySQL service
+output("Testing MySQL connection to {$config['host']}:{$config['port']}...");
+
+// Test connection without database
 try {
-    // Get database instance
-    $db = Database::getInstance();
+    $dsn = "mysql:host={$config['host']};charset={$config['charset']};port={$config['port']}";
+    $pdo = new PDO(
+        $dsn, 
+        $config['username'], 
+        $config['password'], 
+        [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES => false,
+        ]
+    );
+    output("✓ Successfully connected to MySQL server", 'success');
     
-    // Test connection
-    $stmt = $db->query("SELECT 'Connection successful!' as message");
-    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    // Check if the database exists
+    output("Checking if database '{$config['database']}' exists...");
+    $stmt = $pdo->query("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '{$config['database']}'");
+    $database_exists = $stmt->fetchColumn();
     
-    echo "✅ " . $result['message'] . "\n";
-    
-    // Test database schema
-    $tables = [
-        'users',
-        'user_groups',
-        'user_tags',
-        'active_users',
-        'commands',
-        'mic_results',
-        'point_transfers',
-        'settings'
-    ];
-    
-    echo "\nChecking database tables:\n";
-    
-    foreach ($tables as $table) {
-        $stmt = $db->query("SHOW TABLES LIKE '$table'");
-        if ($stmt->rowCount() > 0) {
-            echo "✅ Table '$table' exists\n";
+    if ($database_exists) {
+        output("✓ Database '{$config['database']}' exists", 'success');
+        
+        // Connect to the specific database
+        try {
+            $dsn = "mysql:host={$config['host']};dbname={$config['database']};charset={$config['charset']};port={$config['port']}";
+            $db_pdo = new PDO(
+                $dsn, 
+                $config['username'], 
+                $config['password'], 
+                [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                    PDO::ATTR_EMULATE_PREPARES => false,
+                ]
+            );
+            output("✓ Successfully connected to '{$config['database']}' database", 'success');
             
-            // Count records
-            $stmt = $db->query("SELECT COUNT(*) as count FROM $table");
-            $count = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
-            echo "   - Records: $count\n";
-        } else {
-            echo "❌ Table '$table' does not exist\n";
+            // Check if essential tables exist
+            $tables_to_check = ['users', 'commands', 'settings'];
+            $missing_tables = [];
+            
+            foreach ($tables_to_check as $table) {
+                $stmt = $db_pdo->query("SHOW TABLES LIKE '{$table}'");
+                if ($stmt->rowCount() === 0) {
+                    $missing_tables[] = $table;
+                }
+            }
+            
+            if (empty($missing_tables)) {
+                output("✓ All essential tables found", 'success');
+                
+                // Test a simple query
+                try {
+                    $stmt = $db_pdo->query("SELECT setting_value FROM settings WHERE setting_key = 'sim_audience_on' LIMIT 1");
+                    $value = $stmt->fetchColumn();
+                    output("✓ Successfully ran a test query", 'success');
+                } catch (PDOException $e) {
+                    output("✗ Error running test query: " . $e->getMessage(), 'error');
+                }
+                
+            } else {
+                output("✗ Some essential tables are missing: " . implode(", ", $missing_tables), 'warning');
+                output("You need to run the database initialization script: <a href='init_db.php'>Initialize Database</a>", 'warning');
+            }
+            
+        } catch (PDOException $e) {
+            output("✗ Error connecting to the specific database: " . $e->getMessage(), 'error');
         }
+        
+    } else {
+        output("✗ Database '{$config['database']}' does not exist", 'warning');
+        output("You need to run the database initialization script: <a href='init_db.php'>Initialize Database</a>", 'warning');
     }
     
-    echo "\nDatabase connection test completed successfully!\n";
-    
 } catch (PDOException $e) {
-    echo "❌ Database connection failed: " . $e->getMessage() . "\n";
+    output("✗ MySQL connection failed: " . $e->getMessage(), 'error');
     
-    echo "\nPossible solutions:\n";
-    echo "1. Make sure MySQL server is running (check XAMPP control panel)\n";
-    echo "2. Verify database configuration in 'config/database.php'\n";
-    echo "3. Run the database initialization script: php config/init_db.php\n";
+    // Check if this is a common error and provide suggestions
+    if (strpos($e->getMessage(), "Connection refused") !== false) {
+        output("Possible causes:", 'warning');
+        output("- MySQL service is not running", 'warning');
+        output("- MySQL is running on a different port", 'warning');
+        output("Solution: Make sure MySQL is started from your XAMPP control panel", 'warning');
+    }
+    else if (strpos($e->getMessage(), "Access denied") !== false) {
+        output("Possible causes:", 'warning');
+        output("- Wrong username or password", 'warning');
+        output("Solution: Check your database credentials in config/database.php", 'warning');
+    }
+}
+
+if ($isBrowser) {
+    echo "<div class='next-steps'>";
+    echo "<h2>Next Steps:</h2>";
+    echo "<ul>";
+    echo "<li>If all tests passed, you can <a href='../'>return to the application</a>.</li>";
+    echo "<li>If you see warnings about missing database or tables, <a href='init_db.php'>run the initialization script</a>.</li>";
+    echo "<li>If there are connection errors, check that MySQL is running and the credentials are correct.</li>";
+    echo "</ul>";
+    echo "</div>";
+    echo "</div></body></html>";
+} else {
+    echo "\nTest completed.\n";
 } 
