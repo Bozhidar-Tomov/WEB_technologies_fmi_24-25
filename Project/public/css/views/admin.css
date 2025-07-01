@@ -43,11 +43,11 @@
     margin-bottom: 1em;
     display: flex;
     align-items: center;
-    width: 100%;
+    gap: 1em;
 }
 
 #simAudienceBtn {
-    width: 100%;
+    width: auto;
     margin-top: 0;
     padding: 10px 20px;
 }
