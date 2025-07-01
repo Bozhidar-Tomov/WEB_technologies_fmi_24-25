@@ -1,6 +1,6 @@
 <?php
 $title = "Page Not Found";
-$viewStyle = "css/views/404.css";
+$viewStyle = "../css/views/404.css";
 ob_start();
 ?>
 
@@ -8,9 +8,9 @@ ob_start();
     <h1 class="not-found-title">😵 404 - Page Not Found</h1>
     <p class="not-found-subtitle">Oops! This page marched to its own beat and got lost.</p>
     <p>Sorry, the page you are looking for does not exist.</p>
-    <a class="link" href="/">Go back to the homepage</a>
+    <a class="link" href="../">Go back to the homepage</a>
 </section>
 
 <?php
 $content = ob_get_clean();
-include BASE_PATH . '/app/Views/layout.php';
+include 'layout.php';

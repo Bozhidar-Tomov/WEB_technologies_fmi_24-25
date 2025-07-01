@@ -24,7 +24,7 @@ function connectSSE() {
     evtSource.close();
   }
 
-  evtSource = new EventSource("/sse");
+  evtSource = new EventSource("../sse");
 
   evtSource.onopen = function () {
     console.log("SSE connection established");
@@ -344,7 +344,10 @@ async function startMicRecording(durationSec, commandId, commandType) {
       // Analyze audio
       const analysis = await analyzeAudioBlob(audioBlob, audioContext.sampleRate, commandType);
       // Send results to server
-      sendMicResults(analysis);
+      sendMicResults({
+        commandId,
+        ...analysis
+      });
       // Clean up
       if (micStream) {
         micStream.getTracks().forEach(track => track.stop());
@@ -410,64 +413,89 @@ async function analyzeAudioBlob(blob, sampleRate, commandType) {
 }
 
 function sendMicResults(results) {
-  console.log("Sending mic results:", results);
-  fetch('/api/mic_results.php', {
+  fetch('../api/mic_results.php', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(results)
-  })
-  .then(response => response.json())
-  .then(data => {
-    console.log("Mic results submitted:", data);
-    if (data.accuracy !== undefined) {
-      document.getElementById('reactionAccuracy').textContent = `${data.accuracy}%`;
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      userId: window.userId,
+      ...results
+    })
+  }).then(r => r.json()).then(resp => {
+    console.log('Mic results sent:', resp);
+    // Update UI with results
+    if (results.intensity !== undefined) {
+      document.getElementById('audienceIntensity').textContent = results.intensity + '%';
     }
-  })
-  .catch(error => {
-    console.error("Error submitting mic results:", error);
+    if (results.volume !== undefined) {
+      document.getElementById('audienceVolume').textContent = results.volume + ' dB';
+    }
+    if (results.reactionAccuracy !== undefined) {
+      if (document.getElementById('reactionAccuracy')) {
+        document.getElementById('reactionAccuracy').textContent = results.reactionAccuracy + '%';
+      }
+    }
+    // Update points instantly if returned
+    if (resp.points !== undefined) {
+      // Find the Points field in the user info panel and update it
+      const pointsLi = Array.from(document.querySelectorAll('.user-info-list li')).find(li => li.textContent.includes('Points:'));
+      if (pointsLi) {
+        pointsLi.innerHTML = `<strong>Points:</strong> ${resp.points}`;
+      }
+    }
+  }).catch(e => {
+    console.error('Failed to send mic results:', e);
   });
 }
 
-function initTransferForm() {
-  const form = document.querySelector('.panel form');
-  if (form) {
-    form.addEventListener('submit', function(e) {
+document.addEventListener('DOMContentLoaded', function () {
+  // Transfer Points AJAX handler
+  const transferForm = document.querySelector('form[action="transfer_points.php"]');
+  if (transferForm) {
+    transferForm.addEventListener('submit', function (e) {
       e.preventDefault();
-      const formData = new FormData(form);
-      
-      fetch('/api/transfer_points.php', {
+      const recipient = transferForm.querySelector('[name="recipient"]').value.trim();
+      const amount = parseInt(transferForm.querySelector('[name="amount"]').value, 10);
+      const message = transferForm.querySelector('[name="message"]').value.trim();
+      const feedback = transferForm.querySelector('.form-feedback');
+      feedback.textContent = '';
+      if (!recipient || !amount || amount <= 0) {
+        feedback.textContent = 'Please enter a valid recipient and amount.';
+        feedback.style.color = '#c92a2a';
+        return;
+      }
+      transferForm.querySelector('button[type="submit"]').disabled = true;
+      fetch('../api/transfer_points.php', {
         method: 'POST',
-        body: formData
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fromUserId: window.userId,
+          toUsername: recipient,
+          amount: amount,
+          message: message
+        })
       })
-      .then(response => response.json())
-      .then(data => {
-        const feedback = document.querySelector('.form-feedback');
-        if (feedback) {
-          feedback.textContent = data.message;
-          feedback.className = 'form-feedback ' + (data.success ? 'success' : 'error');
-          
-          if (data.success) {
-            form.reset();
-            // Update points display if returned
-            if (data.newPoints) {
-              const pointsElement = document.querySelector('.user-info-list li:nth-child(2)');
-              if (pointsElement) {
-                pointsElement.innerHTML = '<strong>Points:</strong> ' + data.newPoints;
-              }
+        .then(r => r.json())
+        .then(resp => {
+          transferForm.querySelector('button[type="submit"]').disabled = false;
+          if (resp.success) {
+            // Update points in UI
+            const pointsLi = Array.from(document.querySelectorAll('.user-info-list li')).find(li => li.textContent.includes('Points:'));
+            if (pointsLi) {
+              pointsLi.innerHTML = `<strong>Points:</strong> ${resp.points}`;
             }
+            feedback.textContent = 'Points transferred successfully!';
+            feedback.style.color = '#2b8a3e';
+            transferForm.reset();
+          } else {
+            feedback.textContent = resp.error || 'Transfer failed.';
+            feedback.style.color = '#c92a2a';
           }
-        }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        const feedback = document.querySelector('.form-feedback');
-        if (feedback) {
-          feedback.textContent = 'An error occurred. Please try again.';
-          feedback.className = 'form-feedback error';
-        }
-      });
+        })
+        .catch(e => {
+          transferForm.querySelector('button[type="submit"]').disabled = false;
+          feedback.textContent = 'Transfer failed: ' + e;
+          feedback.style.color = '#c92a2a';
+        });
     });
   }
-}
+});

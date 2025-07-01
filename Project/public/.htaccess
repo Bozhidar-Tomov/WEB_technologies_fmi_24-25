@@ -1,6 +1,3 @@
-# OPTIONAL: This file is not required as routing is now handled by PHP
-# It is kept for compatibility with Apache servers if needed
-
 # Handle front controller pattern for Apache server
 <IfModule mod_rewrite.c>
     RewriteEngine On

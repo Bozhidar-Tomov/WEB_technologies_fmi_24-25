@@ -8,7 +8,7 @@ CrowdPulse is a web application for directing and managing audience emotions (ap
 
 The project follows an MVC flow:
 
-- User visits: `http://localhost:8080/` (using PHP's built-in server)
+- User visits: `http://localhost/Project/public/`
 - `public/index.php` → front controller (routes all requests)
 - `app/Controllers/HomeController.php` → business logic
 - `app/Views/index.php` → HTML page (user sees this)
@@ -41,11 +41,13 @@ routes/
 └── Router.php          # Core routing logic that maps HTTP requests to controllers
 ```
 
+Apache server start point: `Project/public`
+
 ## Database Setup
 
 The application uses MySQL for data storage. Follow these steps to set up the database:
 
-1. Make sure you have MySQL service running
+1. Make sure you have XAMPP installed with MySQL service running
 2. Update database configuration in `config/database.php` if needed (default: localhost, root, no password)
 3. Run the database initialization script:
    ```
@@ -156,11 +158,11 @@ The codebase has been cleaned up to remove:
 
 ## Portable Setup Instructions
 
-This project is designed to be highly portable and can run on any system with PHP and MySQL installed without any special server configuration. It does not require Apache or .htaccess for routing.
+This project can be run on any machine with XAMPP installed without any configuration changes. Follow these steps:
 
 ### Prerequisites
-- PHP 7.4 or higher (with PDO extension enabled)
-- MySQL database
+- XAMPP installed (make sure PHP is in your system PATH)
+- MySQL database (included with XAMPP)
 
 ### Running the Application
 
@@ -175,22 +177,15 @@ This project is designed to be highly portable and can run on any system with PH
 3. Execute the script: `./run.sh`
 4. Open your browser and navigate to http://localhost:8080
 
-#### Running on any PHP-supported server
-You can also deploy this application to any server with PHP support:
-1. Upload all files to your server
-2. Point your web server's document root to the `public` directory
-3. The application will handle routing internally without requiring .htaccess rules
-
 ### Database Setup
-1. Start your MySQL server
+1. Start MySQL from your XAMPP control panel
 2. Run the database setup script (from your browser): http://localhost:8080/config/init_db.php
    - This will create the necessary database and tables
 
-### Stopping the Development Server
+### Stopping the Server
 - Press `Ctrl+C` in the terminal/command prompt window to stop the PHP server
 
 ### Notes
-- The project will use port 8080 by default when using PHP's built-in server. If this port is already in use, modify the port number in the run script.
-- No Apache virtual hosts or .htaccess configuration is needed
+- The project will use port 8080 by default. If this port is already in use, modify the port number in the run script.
+- No Apache virtual hosts configuration is needed
 - You can run this project from any directory
-- All routing is handled internally by the application

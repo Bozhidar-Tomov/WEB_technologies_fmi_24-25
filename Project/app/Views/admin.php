@@ -1,5 +1,5 @@
 <?php
-require_once BASE_PATH . '/app/Database/Database.php';
+require_once __DIR__ . '/../Database/Database.php';
 use App\Database\Database;
 
 $db = Database::getInstance();
@@ -46,7 +46,7 @@ try {
                 </button>
             </div>
             <span id="simAudienceFeedback" style="color:#2b8a3e;"></span>
-            <form id="commandForm" method="post" action="/admin/broadcast" class="form-fields">
+            <form id="commandForm" method="post" action="../admin/broadcast" class="form-fields">
                     <label for="commandType">Command Type:</label>
                     <select id="commandType" name="type" required>
                         <option value="applause">Applause</option>
@@ -126,4 +126,4 @@ try {
     </section>
 </main>
 
-<script src="/js/admin.js"></script>
+<script src="../js/admin.js"></script>

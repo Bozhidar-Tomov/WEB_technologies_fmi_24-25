@@ -1,7 +1,3 @@
-# OPTIONAL: This file is only needed for Apache servers without vhost configuration
-# The application can run without this file using PHP's built-in server or any other server
-# as routing is handled internally by the application
-
 # This file allows the project to run on Apache without vhost configuration
 # while still being compatible with PHP's built-in server
 

@@ -53,7 +53,7 @@ try {
     // Connect to MySQL server without selecting a database
     $pdo = new PDO(
         "mysql:host=$host;charset=$charset",
-        $username,
+`        $username,
         $password,
         [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,

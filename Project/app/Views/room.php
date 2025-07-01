@@ -40,7 +40,7 @@ $responders = '';
         <section class="panel meter" aria-label="Audience Reaction">
             <h2 class="panel-title">Audience Reaction</h2>
             <ul class="audience-info-list">
-                <?php if (!file_exists(BASE_PATH . '/app/Database/sim_audience_on.flag')): ?>
+                <?php if (!file_exists(__DIR__ . '/../Database/sim_audience_on.flag')): ?>
                 <li>🔥 Intensity: <span id="audienceIntensity"><?= $audienceIntensity ?></span></li>
                 <?php endif; ?>
                 <li>🔊 Volume: <span id="audienceVolume"><?= $audienceVolume ?></span></li>
@@ -49,7 +49,7 @@ $responders = '';
         </section>
         <section class="panel" aria-label="Transfer Points">
             <h2 class="panel-title">💸 Transfer Points</h2>
-            <form class="form-fields" action="/api/transfer_points.php" method="POST" autocomplete="off">
+            <form class="form-fields" action="../api/transfer_points.php" method="POST" autocomplete="off">
                 <label for="recipient">Recipient Username:</label>
                 <input type="text" id="recipient" name="recipient" required>
                 <label for="amount">Points:</label>
@@ -71,4 +71,4 @@ $responders = '';
 <script>
     window.userId = "<?= $_SESSION['user']['id'] ?? '' ?>";
 </script>
-<script src="/js/room.js"></script>
+<script src="../js/room.js"></script>
