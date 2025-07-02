@@ -173,8 +173,7 @@ class CommandService
     public function userMatchesCommandFilters(string $userId, array $commandData): bool
     {
         // If no filters are set, all users match
-        if (empty($commandData['targetGroups']) && 
-            empty($commandData['targetTags']) && 
+        if (empty($commandData['targetCategories']) && 
             empty($commandData['targetGender'])) {
             return true;
         }
@@ -183,11 +182,9 @@ class CommandService
             // Get user data
             $stmt = $this->db->query(
                 "SELECT u.*, 
-                        GROUP_CONCAT(DISTINCT ug.group_name) as groups_concat, 
-                        GROUP_CONCAT(DISTINCT ut.tag) as tags_concat
+                        GROUP_CONCAT(DISTINCT uc.category) as categories_concat
                  FROM users u
-                 LEFT JOIN user_groups ug ON u.id = ug.user_id
-                 LEFT JOIN user_tags ut ON u.id = ut.user_id
+                 LEFT JOIN user_categories uc ON u.id = uc.user_id
                  WHERE u.id = ?
                  GROUP BY u.id",
                 [$userId]
@@ -199,16 +196,10 @@ class CommandService
                 return false;
             }
             
-            // Process user groups
-            $userGroups = [];
-            if (!empty($userData['groups_concat'])) {
-                $userGroups = explode(',', $userData['groups_concat']);
-            }
-            
-            // Process user tags
-            $userTags = [];
-            if (!empty($userData['tags_concat'])) {
-                $userTags = explode(',', $userData['tags_concat']);
+            // Process user categories
+            $userCategories = [];
+            if (!empty($userData['categories_concat'])) {
+                $userCategories = explode(',', $userData['categories_concat']);
             }
             
             // Check gender filter
@@ -216,42 +207,22 @@ class CommandService
                 return false;
             }
             
-            // Check groups filter
-            if (!empty($commandData['targetGroups'])) {
-                $targetGroups = is_array($commandData['targetGroups']) 
-                    ? $commandData['targetGroups'] 
-                    : explode(',', $commandData['targetGroups']);
+            // Check categories filter
+            if (!empty($commandData['targetCategories'])) {
+                $targetCategories = is_array($commandData['targetCategories']) 
+                    ? $commandData['targetCategories'] 
+                    : explode(',', $commandData['targetCategories']);
                 
-                $hasMatchingGroup = false;
-                foreach ($targetGroups as $group) {
-                    $group = trim($group);
-                    if (in_array($group, $userGroups)) {
-                        $hasMatchingGroup = true;
+                $hasMatchingCategory = false;
+                foreach ($targetCategories as $category) {
+                    $category = trim($category);
+                    if (in_array($category, $userCategories)) {
+                        $hasMatchingCategory = true;
                         break;
                     }
                 }
                 
-                if (!$hasMatchingGroup) {
-                    return false;
-                }
-            }
-            
-            // Check tags filter
-            if (!empty($commandData['targetTags'])) {
-                $targetTags = is_array($commandData['targetTags']) 
-                    ? $commandData['targetTags'] 
-                    : explode(',', $commandData['targetTags']);
-                
-                $hasMatchingTag = false;
-                foreach ($targetTags as $tag) {
-                    $tag = trim($tag);
-                    if (in_array($tag, $userTags)) {
-                        $hasMatchingTag = true;
-                        break;
-                    }
-                }
-                
-                if (!$hasMatchingTag) {
+                if (!$hasMatchingCategory) {
                     return false;
                 }
             }

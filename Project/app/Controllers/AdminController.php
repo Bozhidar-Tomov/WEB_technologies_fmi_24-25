@@ -46,14 +46,15 @@ class AdminController extends BaseController
             'timestamp' => time()
         ];
         
-        // Process target groups
-        if (!empty($_POST['groups'])) {
-            $commandData['targetGroups'] = array_map('trim', explode(',', $_POST['groups']));
+        // Process target categories (combines former groups and tags)
+        $categories = [];
+        
+        if (!empty($_POST['categories'])) {
+            $categories = array_map('trim', explode(',', $_POST['categories']));
         }
         
-        // Process target tags
-        if (!empty($_POST['tags'])) {
-            $commandData['targetTags'] = array_map('trim', explode(',', $_POST['tags']));
+        if (!empty($categories)) {
+            $commandData['targetCategories'] = $categories;
         }
         
         // Process target gender

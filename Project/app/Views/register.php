@@ -43,8 +43,8 @@
             <option value="viewer">Passive Viewer</option>
         </select>
 
-        <label for="tags">Tags (comma-separated, e.g. VIP,Guest,Fan):</label>
-        <input type="text" name="tags" id="tags" autocomplete="off">
+        <label for="categories">Categories (comma-separated, e.g. VIP,Guest,Fan):</label>
+        <input type="text" name="categories" id="categories" autocomplete="off">
 
         <button class="btn btn-primary" type="submit">Register</button>
     </form>

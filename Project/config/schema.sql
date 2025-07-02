@@ -14,22 +14,13 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- User groups table
-CREATE TABLE IF NOT EXISTS user_groups (
+-- User categories table (replaces both user_groups and user_tags tables)
+CREATE TABLE IF NOT EXISTS user_categories (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id VARCHAR(32),
-    group_name VARCHAR(50),
+    category VARCHAR(50),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    UNIQUE KEY user_group_unique (user_id, group_name)
-);
-
--- User tags table
-CREATE TABLE IF NOT EXISTS user_tags (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id VARCHAR(32),
-    tag VARCHAR(50),
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    UNIQUE KEY user_tag_unique (user_id, tag)
+    UNIQUE KEY user_category_unique (user_id, category)
 );
 
 -- Active users table

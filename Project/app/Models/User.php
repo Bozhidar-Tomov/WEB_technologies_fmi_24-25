@@ -12,10 +12,9 @@ class User
     public $id;
     public $username;
     public $role; // participant, viewer, leader, admin
-    public $groups = [];
+    public $categories = [];
     public $points = 0;
     public $gender;
-    public $tags = [];
     public $password;
     public $created_at;
 
@@ -28,6 +27,29 @@ class User
         foreach ($data as $key => $value) {
             if (property_exists($this, $key)) {
                 $this->$key = $value;
+            }
+        }
+        
+        // Handle legacy data format conversion
+        if (isset($data['groups']) || isset($data['tags'])) {
+            $this->categories = [];
+            
+            // Add groups to categories
+            if (isset($data['groups']) && is_array($data['groups'])) {
+                foreach ($data['groups'] as $group) {
+                    if (!empty($group) && !in_array($group, $this->categories)) {
+                        $this->categories[] = $group;
+                    }
+                }
+            }
+            
+            // Add tags to categories
+            if (isset($data['tags']) && is_array($data['tags'])) {
+                foreach ($data['tags'] as $tag) {
+                    if (!empty($tag) && !in_array($tag, $this->categories)) {
+                        $this->categories[] = $tag;
+                    }
+                }
             }
         }
     }
@@ -79,26 +101,14 @@ class User
                 );
             }
             
-            // Update groups
-            $this->db->query("DELETE FROM user_groups WHERE user_id = ?", [$this->id]);
+            // Update categories
+            $this->db->query("DELETE FROM user_categories WHERE user_id = ?", [$this->id]);
             
-            if (!empty($this->groups)) {
-                foreach ($this->groups as $group) {
+            if (!empty($this->categories)) {
+                foreach ($this->categories as $category) {
                     $this->db->query(
-                        "INSERT INTO user_groups (user_id, group_name) VALUES (?, ?)",
-                        [$this->id, $group]
-                    );
-                }
-            }
-            
-            // Update tags
-            $this->db->query("DELETE FROM user_tags WHERE user_id = ?", [$this->id]);
-            
-            if (!empty($this->tags)) {
-                foreach ($this->tags as $tag) {
-                    $this->db->query(
-                        "INSERT INTO user_tags (user_id, tag) VALUES (?, ?)",
-                        [$this->id, $tag]
+                        "INSERT INTO user_categories (user_id, category) VALUES (?, ?)",
+                        [$this->id, $category]
                     );
                 }
             }
@@ -118,11 +128,9 @@ class User
         
         $stmt = $db->query(
             "SELECT u.*, 
-                    GROUP_CONCAT(DISTINCT ug.group_name) as groups_concat, 
-                    GROUP_CONCAT(DISTINCT ut.tag) as tags_concat
+                    GROUP_CONCAT(DISTINCT uc.category) as categories_concat
              FROM users u
-             LEFT JOIN user_groups ug ON u.id = ug.user_id
-             LEFT JOIN user_tags ut ON u.id = ut.user_id
+             LEFT JOIN user_categories uc ON u.id = uc.user_id
              WHERE u.username = ?
              GROUP BY u.id",
             [$username]
@@ -143,16 +151,10 @@ class User
         $user->password = $userData['password'];
         $user->created_at = $userData['created_at'];
         
-        // Process groups
-        $user->groups = [];
-        if (!empty($userData['groups_concat'])) {
-            $user->groups = explode(',', $userData['groups_concat']);
-        }
-        
-        // Process tags
-        $user->tags = [];
-        if (!empty($userData['tags_concat'])) {
-            $user->tags = explode(',', $userData['tags_concat']);
+        // Process categories
+        $user->categories = [];
+        if (!empty($userData['categories_concat'])) {
+            $user->categories = explode(',', $userData['categories_concat']);
         }
         
         return $user;
@@ -169,27 +171,19 @@ class User
         foreach ($userRows as $userData) {
             $userId = $userData['id'];
             
-            // Get groups
-            $groupStmt = $db->query(
-                "SELECT group_name FROM user_groups WHERE user_id = ?",
+            // Get categories
+            $categoryStmt = $db->query(
+                "SELECT category FROM user_categories WHERE user_id = ?",
                 [$userId]
             );
-            $groups = $groupStmt->fetchAll(PDO::FETCH_COLUMN);
-            
-            // Get tags
-            $tagStmt = $db->query(
-                "SELECT tag FROM user_tags WHERE user_id = ?",
-                [$userId]
-            );
-            $tags = $tagStmt->fetchAll(PDO::FETCH_COLUMN);
+            $categories = $categoryStmt->fetchAll(PDO::FETCH_COLUMN);
             
             $users[$userId] = [
                 'username' => $userData['username'],
                 'role' => $userData['role'],
-                'groups' => $groups,
+                'categories' => $categories,
                 'points' => (int)$userData['points'],
                 'gender' => $userData['gender'],
-                'tags' => $tags,
                 'password' => $userData['password'],
                 'created_at' => $userData['created_at']
             ];

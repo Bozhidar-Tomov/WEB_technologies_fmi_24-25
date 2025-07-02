@@ -84,8 +84,7 @@ function updateLastCommandInfo(cmd) {
     <b>Intensity:</b> ${cmd.intensity}<br>
     <b>Duration:</b> ${cmd.duration}s<br>
     <b>Countdown:</b> ${cmd.countdown}s<br>
-    <b>Target Groups:</b> ${Array.isArray(cmd.targetGroups) ? cmd.targetGroups.join(', ') : (cmd.targetGroups || 'All')}<br>
-    <b>Target Tags:</b> ${Array.isArray(cmd.targetTags) ? cmd.targetTags.join(', ') : (cmd.targetTags || 'All')}<br>
+    <b>Target Categories:</b> ${Array.isArray(cmd.targetCategories) ? cmd.targetCategories.join(', ') : (cmd.targetCategories || 'All')}<br>
     <b>Target Gender:</b> ${cmd.targetGender || 'All'}<br>
     <b>Message:</b> ${cmd.message || ''}<br>
     <b>Sent at:</b> ${new Date(cmd.timestamp * 1000).toLocaleString()}

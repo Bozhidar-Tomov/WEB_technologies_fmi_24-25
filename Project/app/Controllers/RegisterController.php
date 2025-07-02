@@ -29,7 +29,7 @@ class RegisterController extends BaseController
             'password' => $_POST['password'] ?? '',
             'gender'   => $_POST['gender'] ?? '',
             'role'     => $_POST['role'] ?? '',
-            'tags'     => $_POST['tags'] ?? ''
+            'categories' => $_POST['categories'] ?? ''
         ];
 
         $errors = [];
@@ -46,30 +46,32 @@ class RegisterController extends BaseController
             return;
         }
 
-        // Group assignment logic
-        $groups = [];
-        // Add gender as a group
+        // Category assignment logic
+        $categories = [];
+        
+        // Add gender as a category
         if (!empty($data['gender'])) {
-            $groups[] = $data['gender'];
+            $categories[] = $data['gender'];
         }
-        // Add tags as groups
-        if (!empty($data['tags'])) {
-            $groups = array_merge($groups, array_filter(array_map('trim', explode(',', $data['tags']))));
+        
+        // Add user-defined categories
+        if (!empty($data['categories'])) {
+            $categories = array_merge($categories, array_filter(array_map('trim', explode(',', $data['categories']))));
         }
+        
         // Assign to A, B, C, or D group in round-robin fashion
         $allUsers = \App\Models\User::loadUsers();
         $userCount = count($allUsers);
         $groupNames = ['A', 'B', 'C', 'D'];
-        $groups[] = 'Group ' . $groupNames[$userCount % 4];
+        $categories[] = 'Group ' . $groupNames[$userCount % 4];
 
         $user = new User([
             'username' => $data['username'],
             'password' => password_hash($data['password'], PASSWORD_DEFAULT),
             'gender'   => $data['gender'],
             'role'     => $data['role'],
-            'tags'     => array_filter(array_map('trim', explode(',', $data['tags']))),
-            'points'   => 0,
-            'groups'   => $groups
+            'categories' => $categories,
+            'points'   => 0
         ]);
 
         if ($user->save()) {
@@ -78,8 +80,7 @@ class RegisterController extends BaseController
                 'username' => htmlspecialchars($user->username),
                 'role'     => $user->role,
                 'points'   => $user->points,
-                'groups'   => $user->groups,
-                'tags'     => $user->tags,
+                'categories' => $user->categories,
                 'gender'   => $user->gender,
                 'title'    => $user->role === 'admin' ? 'Admin Panel' : 'Room View'
             ];

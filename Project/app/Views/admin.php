@@ -74,11 +74,8 @@ try {
                     <label for="countdown">Countdown (seconds):</label>
                     <input type="number" id="countdown" name="countdown" min="0" max="10" value="3">
 
-                    <label for="groups">Target Groups (comma-separated):</label>
-                    <input type="text" id="groups" name="groups" placeholder="e.g., VIP,section-A">
-                    
-                    <label for="tags">Target Tags (comma-separated):</label>
-                    <input type="text" id="tags" name="tags" placeholder="e.g., VIP,premium,student">
+                    <label for="categories">Target Categories (comma-separated):</label>
+                    <input type="text" id="categories" name="categories" placeholder="e.g., VIP,section-A,premium,student">
                     
                     <label for="gender">Target Gender:</label>
                     <select id="gender" name="gender">
