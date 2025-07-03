@@ -376,11 +376,18 @@ async function startMicRecording(durationSec, commandId, commandType) {
       const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
       // Analyze audio
       const analysis = await analyzeAudioBlob(audioBlob, audioContext.sampleRate, commandType);
+      // Update participant's own fields
+      if (document.getElementById('reactionAccuracy')) {
+        document.getElementById('reactionAccuracy').textContent = analysis.reactionAccuracy + '%';
+      }
+      if (document.getElementById('audienceIntensity')) {
+        document.getElementById('audienceIntensity').textContent = analysis.intensity;
+      }
+      if (document.getElementById('audienceVolume')) {
+        document.getElementById('audienceVolume').textContent = analysis.volume;
+      }
       // Send results to server
-      sendMicResults({
-        commandId,
-        ...analysis
-      });
+      sendMicResults(analysis);
       // Clean up
       if (micStream) {
         micStream.getTracks().forEach(track => track.stop());
@@ -414,16 +421,18 @@ async function analyzeAudioBlob(blob, sampleRate, commandType) {
   for (let i = 0; i < data.length; i++) {
     const abs = Math.abs(data[i]);
     sum += abs * abs;
-    if (abs > peak) peak = abs;
+    if (abs > 0.05 && abs > peak) peak = abs;
     if (startIdx === -1 && abs > 0.02) startIdx = i;
     if (abs > 0.02) endIdx = i;
   }
   const rms = Math.sqrt(sum / data.length);
   const duration = audioBuffer.duration;
+  // Debug: log calculated values
+  // console.log('RMS:', rms, 'Peak:', peak, 'Duration:', duration);
   let reactionAccuracy = 0;
   if (commandType === 'silence') {
     // Special logic: high accuracy if very little sound
-    if (rms < 0.01) {
+    if (rms < 0.005) {
       reactionAccuracy = 100;
     } else {
       // Scale down accuracy based on how loud the sound was
@@ -439,7 +448,7 @@ async function analyzeAudioBlob(blob, sampleRate, commandType) {
   }
   await ctx.close();
   return {
-    intensity: Math.round(rms * 100),
+    intensity: Math.round(rms * 800),
     volume: Math.round(peak * 100),
     reactionAccuracy
   };
@@ -454,7 +463,7 @@ function sendMicResults(results) {
     body: JSON.stringify({
       userId: userId,
       commandId: currentCommandId,
-      results: results,
+      ...results,
     }),
   })
     .then((response) => response.json())
