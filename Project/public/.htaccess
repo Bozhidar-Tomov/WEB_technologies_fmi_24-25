@@ -1,5 +1,4 @@
 RewriteEngine On
-RewriteBase /Project/public/
 
 # If the request is for a real file or directory, serve it directly
 RewriteCond %{REQUEST_FILENAME} -f [OR]

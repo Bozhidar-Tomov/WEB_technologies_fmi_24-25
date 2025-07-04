@@ -40,6 +40,9 @@
             <span class="authors">Bozhidar Tomov, Mira Velikova</span>
         </small>
     </footer>
+    <script>
+        window.basePath = "<?= $basePath ?>";
+    </script>
 </body>
 
 </html>

@@ -155,5 +155,5 @@ document.addEventListener('DOMContentLoaded', function () {
   
   // Start periodic updates of statistics
   updateStatistics(); // Initial update
-  setInterval(updateStatistics, 10000); // Update every 10 seconds
+  setInterval(updateStatistics, 3000); // Update every 3 seconds
 });

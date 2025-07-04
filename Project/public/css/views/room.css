@@ -1,6 +1,7 @@
 @import url('../components/panel.css');
 @import url('../components/command-panel.css');
 @import url('../components/btn-primary.css');
+@import url('../components/btn-secondary.css');
 @import url('../components/form-fields.css');
 @import url('../components/form-feedback.css');
 
@@ -72,17 +73,218 @@
     max-width: 900px;
 }
 
-.user-info-list,
-.audience-info-list {
+/* User info styling */
+.user-profile {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.user-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #9370DB, #6A5ACD);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5em;
+    font-weight: bold;
+    color: white;
+    margin-right: 15px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+}
+
+.user-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-name {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.user-role {
+    font-size: 0.9em;
+    opacity: 0.8;
+}
+
+.user-info-list {
     list-style: none;
     padding: 0;
-    margin: 0;
+    margin: 0 0 16px 0;
     font-size: 1em;
 }
 
-.user-info-list li,
-.audience-info-list li {
-    margin-bottom: 7px;
+.user-info-list li {
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.info-label {
+    font-weight: 500;
+    opacity: 0.85;
+}
+
+.info-value {
+    font-weight: 600;
+}
+
+#editCategoriesBtn {
+    width: 100%;
+    margin-top: 8px;
+}
+
+/* Audience panel styling */
+.audience-panel {
+    min-width: 280px;
+}
+
+.audience-metrics {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 8px 0;
+}
+
+.audience-metric {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.2s ease;
+}
+
+.audience-metric:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+}
+
+.audience-metric.metric-updated {
+    animation: pulse-highlight 1s ease;
+}
+
+@keyframes pulse-highlight {
+    0% {
+        background-color: rgba(255, 111, 161, 0.2);
+        border-color: rgba(255, 111, 161, 0.4);
+        transform: scale(1.02);
+    }
+
+    100% {
+        background-color: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 255, 255, 0.1);
+        transform: scale(1);
+    }
+}
+
+.metric-icon {
+    font-size: 1.8em;
+    margin-right: 14px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.metric-details {
+    flex: 1;
+}
+
+.metric-label {
+    font-size: 0.85em;
+    opacity: 0.7;
+    margin-bottom: 2px;
+}
+
+.metric-value {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #ff6fa1;
+}
+
+/* Modal styling */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 10000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    overflow: auto;
+}
+
+.modal-content {
+    position: relative;
+    background: linear-gradient(135deg, #2d2b42, #1f1d30);
+    margin: 10% auto;
+    padding: 24px;
+    border-radius: 12px;
+    max-width: 500px;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.close-modal {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 24px;
+    font-weight: bold;
+    color: #aaa;
+    cursor: pointer;
+}
+
+.close-modal:hover {
+    color: #fff;
+}
+
+.modal h3 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    color: #e6a6e6;
+}
+
+.modal-description {
+    margin-bottom: 20px;
+    font-size: 0.9em;
+    opacity: 0.8;
+}
+
+.command-optional-message {
+    margin-top: 12px;
+    padding: 12px 16px;
+    background: linear-gradient(90deg, #f3f0ff 0%, #e7f5ff 100%);
+    border-left: 4px solid #7950f2;
+    border-radius: 6px;
+    color: #343a40;
+    font-size: 1.08em;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(121, 80, 242, 0.07);
+    transition: background 0.2s;
+}
+
+.command-optional-message .message-icon {
+    font-size: 1.4em;
+    margin-right: 10px;
+    color: #7950f2;
+}
+
+.command-optional-message .message-text {
+    flex: 1;
+    word-break: break-word;
 }
 
 @media (max-width: 900px) {
@@ -95,5 +297,10 @@
     .panel {
         min-width: 0;
         width: 95%;
+    }
+
+    .modal-content {
+        width: 90%;
+        margin: 20% auto;
     }
 }

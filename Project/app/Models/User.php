@@ -67,6 +67,9 @@ class User
                 $this->id = uniqid();
             }
             
+            // Convert categories array to string
+            $categoriesStr = !empty($this->categories) ? implode(',', $this->categories) : null;
+            
             // Check if user exists
             $stmt = $this->db->query("SELECT id FROM users WHERE id = ?", [$this->id]);
             $exists = $stmt->rowCount() > 0;
@@ -74,21 +77,22 @@ class User
             if ($exists) {
                 // Update existing user
                 $this->db->query(
-                    "UPDATE users SET username = ?, role = ?, points = ?, gender = ?, password = ? WHERE id = ?",
+                    "UPDATE users SET username = ?, role = ?, points = ?, gender = ?, password = ?, categories = ? WHERE id = ?",
                     [
                         $this->username,
                         $this->role,
                         $this->points,
                         $this->gender,
                         $this->password,
+                        $categoriesStr,
                         $this->id
                     ]
                 );
             } else {
                 // Insert new user
                 $this->db->query(
-                    "INSERT INTO users (id, username, role, points, gender, password, created_at) 
-                     VALUES (?, ?, ?, ?, ?, ?, ?)",
+                    "INSERT INTO users (id, username, role, points, gender, password, categories, created_at) 
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                     [
                         $this->id,
                         $this->username,
@@ -96,21 +100,10 @@ class User
                         $this->points,
                         $this->gender,
                         $this->password,
+                        $categoriesStr,
                         $this->created_at
                     ]
                 );
-            }
-            
-            // Update categories
-            $this->db->query("DELETE FROM user_categories WHERE user_id = ?", [$this->id]);
-            
-            if (!empty($this->categories)) {
-                foreach ($this->categories as $category) {
-                    $this->db->query(
-                        "INSERT INTO user_categories (user_id, category) VALUES (?, ?)",
-                        [$this->id, $category]
-                    );
-                }
             }
             
             $this->db->commit();
@@ -127,12 +120,7 @@ class User
         $db = Database::getInstance();
         
         $stmt = $db->query(
-            "SELECT u.*, 
-                    GROUP_CONCAT(DISTINCT uc.category) as categories_concat
-             FROM users u
-             LEFT JOIN user_categories uc ON u.id = uc.user_id
-             WHERE u.username = ?
-             GROUP BY u.id",
+            "SELECT * FROM users WHERE username = ?",
             [$username]
         );
         
@@ -153,8 +141,8 @@ class User
         
         // Process categories
         $user->categories = [];
-        if (!empty($userData['categories_concat'])) {
-            $user->categories = explode(',', $userData['categories_concat']);
+        if (!empty($userData['categories'])) {
+            $user->categories = explode(',', $userData['categories']);
         }
         
         return $user;
@@ -171,12 +159,11 @@ class User
         foreach ($userRows as $userData) {
             $userId = $userData['id'];
             
-            // Get categories
-            $categoryStmt = $db->query(
-                "SELECT category FROM user_categories WHERE user_id = ?",
-                [$userId]
-            );
-            $categories = $categoryStmt->fetchAll(PDO::FETCH_COLUMN);
+            // Process categories
+            $categories = [];
+            if (!empty($userData['categories'])) {
+                $categories = explode(',', $userData['categories']);
+            }
             
             $users[$userId] = [
                 'username' => $userData['username'],
@@ -256,27 +243,15 @@ class User
             
             // Log the transfer
             $db->query(
-                "INSERT INTO point_transfers (from_user_id, to_user_id, amount, timestamp) 
-                 VALUES (?, ?, ?, ?)",
+                "INSERT INTO point_transfers (from_user_id, to_user_id, amount, timestamp) VALUES (?, ?, ?, ?)",
                 [$fromUserId, $toUserId, $amount, time()]
             );
             
-            // Get updated points for sender
-            $stmt = $db->query(
-                "SELECT points FROM users WHERE id = ?",
-                [$fromUserId]
-            );
-            $updatedSender = $stmt->fetch(PDO::FETCH_ASSOC);
-            
             $db->commit();
-            
-            return [
-                'success' => true, 
-                'points' => (int)$updatedSender['points']
-            ];
+            return ['success' => true];
         } catch (PDOException $e) {
             $db->rollback();
-            return ['success' => false, 'error' => 'Database error: ' . $e->getMessage()];
+            return ['success' => false, 'error' => 'Transfer failed'];
         }
     }
 }

@@ -50,11 +50,14 @@ class Router
 
     private function normalize($uri)
     {
+        $basePath = rtrim($this->basePath, '/');
+        
         // Remove the base path from the URI if it exists
-        if ($this->basePath && strpos($uri, $this->basePath) === 0) {
-            $uri = substr($uri, strlen($this->basePath));
+        if ($basePath && strpos($uri, $basePath) === 0) {
+            $uri = substr($uri, strlen($basePath));
         }
         
+        $uri = '/' . ltrim($uri, '/');
         return rtrim($uri, '/') ?: '/';
     }
     
