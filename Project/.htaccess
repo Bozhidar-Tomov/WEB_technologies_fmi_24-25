@@ -1,4 +1,3 @@
 RewriteEngine On
-# Redirect requests to the public directory
 RewriteRule ^$ public/ [L]
 RewriteRule (.*) public/$1 [L] 

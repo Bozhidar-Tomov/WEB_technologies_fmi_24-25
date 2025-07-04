@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS point_transfers (
     from_user_id VARCHAR(32),
     to_user_id VARCHAR(32),
     amount INT,
+    message TEXT,
     timestamp INT,
     FOREIGN KEY (from_user_id) REFERENCES users(id) ON DELETE SET NULL,
     FOREIGN KEY (to_user_id) REFERENCES users(id) ON DELETE SET NULL

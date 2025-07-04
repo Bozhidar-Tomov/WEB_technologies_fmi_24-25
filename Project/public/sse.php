@@ -19,7 +19,9 @@ if (!isset($_SESSION['user'])) {
 }
 
 require_once __DIR__ . '/../app/Services/CommandService.php';
+require_once __DIR__ . '/../app/Database/Database.php';
 use App\Services\CommandService;
+use App\Database\Database;
 
 $userId = $_SESSION['user']['id'];
 
@@ -42,36 +44,51 @@ $lastActiveUpdateTime = time();
 $endTime = time() + (30 * 60);
 
 while (time() < $endTime) {
-    // Update active status every 15 seconds
-    if (time() - $lastActiveUpdateTime >= 15) {
-        $commandService->registerActiveUser($userId);
-        $lastActiveUpdateTime = time();
-    }
-    
-    // Check for new commands every 2 seconds
-    if (time() - $lastCheckTime >= 2) {
-        $command = checkForNewCommands($commandService, $userId);
-        $lastCheckTime = time();
+    try {
+        // Update active status every 15 seconds
+        if (time() - $lastActiveUpdateTime >= 15) {
+            $commandService->registerActiveUser($userId);
+            $lastActiveUpdateTime = time();
+        }
         
-        if ($command) {
-            echo "event: command\n";
-            echo "data: " . json_encode($command) . "\n\n";
+        // Check for new commands every 2 seconds
+        if (time() - $lastCheckTime >= 2) {
+            $command = checkForNewCommands($commandService, $userId);
+            $lastCheckTime = time();
+            
+            if ($command) {
+                echo "event: command\n";
+                echo "data: " . json_encode($command) . "\n\n";
+                flush();
+                $lastEventTime = time();
+            }
+            
+            // Check for transfer messages specifically
+            $transferMessage = checkForTransferMessages($userId);
+            if ($transferMessage) {
+                echo "event: command\n";
+                echo "data: " . json_encode($transferMessage) . "\n\n";
+                flush();
+                $lastEventTime = time();
+            }
+        }
+        
+        // Send heartbeat every 15 seconds
+        if (time() - $lastEventTime >= 15) {
+            $activeUsers = $commandService->getActiveUserCount();
+            echo "event: heartbeat\n";
+            echo "data: {\"time\": " . time() . ", \"activeUsers\": " . $activeUsers . "}\n\n";
             flush();
             $lastEventTime = time();
         }
+        
+        // Sleep to prevent CPU hogging
+        usleep(500000); // Sleep for 0.5 seconds
+    } catch (Exception $e) {
+        // Log error but continue the loop
+        error_log("SSE Error: " . $e->getMessage());
+        usleep(1000000); // Sleep for 1 second on error
     }
-    
-    // Send heartbeat every 15 seconds
-    if (time() - $lastEventTime >= 15) {
-        $activeUsers = $commandService->getActiveUserCount();
-        echo "event: heartbeat\n";
-        echo "data: {\"time\": " . time() . ", \"activeUsers\": " . $activeUsers . "}\n\n";
-        flush();
-        $lastEventTime = time();
-    }
-    
-    // Sleep to prevent CPU hogging
-    usleep(500000); // Sleep for 0.5 seconds
 }
 
 $commandService->removeActiveUser($userId);
@@ -81,6 +98,15 @@ function checkForNewCommands($commandService, $userId) {
     $command = $commandService->getActiveCommand();
     
     if (!$command || empty($command['id'])) {
+        return null;
+    }
+    
+    // Special handling for transfer messages
+    if ($command['type'] === 'transfer_message') {
+        // Check if this transfer message is for this specific user
+        if (isset($command['toUserId']) && $command['toUserId'] === $userId) {
+            return $command;
+        }
         return null;
     }
     
@@ -98,4 +124,46 @@ function checkForNewCommands($commandService, $userId) {
     }
     
     return $command;
+}
+
+function checkForTransferMessages($userId) {
+    try {
+        $db = Database::getInstance();
+        
+        // Get unread transfer messages for this user
+        $stmt = $db->query(
+            "SELECT c.* FROM commands c 
+             WHERE c.command_type = 'transfer_message' 
+             AND c.is_active = 1 
+             AND JSON_EXTRACT(c.command_data, '$.toUserId') = ?
+             ORDER BY c.timestamp DESC 
+             LIMIT 1",
+            [$userId]
+        );
+        
+        $command = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($command) {
+            $commandData = json_decode($command['command_data'], true);
+            
+            // Mark this command as inactive so it won't be sent again
+            $db->query(
+                "UPDATE commands SET is_active = 0 WHERE id = ?",
+                [$command['id']]
+            );
+            
+            return [
+                'id' => $command['id'],
+                'type' => 'transfer_message',
+                'fromUsername' => $commandData['fromUsername'],
+                'message' => $commandData['message'],
+                'amount' => $commandData['amount'],
+                'timestamp' => $command['timestamp']
+            ];
+        }
+        
+        return null;
+    } catch (Exception $e) {
+        return null;
+    }
 } 

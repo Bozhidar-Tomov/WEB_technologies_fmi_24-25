@@ -1,4 +1,8 @@
 <?php
+// Prevent any PHP errors from being output as HTML
+error_reporting(0);
+ini_set('display_errors', 0);
+
 header('Content-Type: application/json');
 session_start();
 
@@ -8,60 +12,28 @@ require_once __DIR__ . '/../../app/Database/Database.php';
 use App\Models\User;
 use App\Database\Database;
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['success' => false, 'error' => 'Method not allowed']);
-    exit;
-}
-
-// Check if user is logged in
-if (!isset($_SESSION['user']) || empty($_SESSION['user']['id'])) {
-    http_response_code(401);
-    echo json_encode(['success' => false, 'error' => 'Unauthorized']);
-    exit;
-}
-
-// Determine request data source (supports JSON fetch as well as regular form submission)
-$rawInput = file_get_contents('php://input');
-$requestData = [];
-if ($rawInput && strpos($_SERVER['CONTENT_TYPE'] ?? '', 'application/json') === 0) {
-    $decoded = json_decode($rawInput, true);
-    if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-        $requestData = $decoded;
-    }
-}
-// Fallback to traditional form data if JSON not provided
-if (empty($requestData)) {
-    $requestData = $_POST;
-}
-
-$fromUserId = $_SESSION['user']['id'];
-$toUsername = trim($requestData['recipient'] ?? '');
-$amount     = isset($requestData['amount']) ? (int)$requestData['amount'] : 0;
-$message    = trim($requestData['message'] ?? '');
-
-// Collect validation errors for better feedback
-$validationErrors = [];
-if (!$toUsername) {
-    $validationErrors[] = 'recipient';
-}
-if ($amount <= 0) {
-    $validationErrors[] = 'amount';
-}
-
-if (!empty($validationErrors)) {
-    http_response_code(400);
-    echo json_encode([
-        'success' => false,
-        'error'   => 'Missing or invalid fields',
-        'fields'  => $validationErrors
-    ]);
-    exit;
-}
-
-$db = Database::getInstance();
-
 try {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        echo json_encode(['success' => false, 'error' => 'Method not allowed']);
+        exit;
+    }
+
+    $data = json_decode(file_get_contents('php://input'), true);
+    $fromUserId = $data['fromUserId'] ?? '';
+    $toUsername = trim($data['toUsername'] ?? '');
+    $amount = (int)($data['amount'] ?? 0);
+    $message = trim($data['message'] ?? '');
+
+    if (!$fromUserId || !$toUsername || $amount <= 0) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'Missing or invalid fields']);
+        exit;
+    }
+
+
+    $db = Database::getInstance();
+
     // Check if sender exists and has enough points
     $stmt = $db->query(
         "SELECT id, points FROM users WHERE id = ?",
@@ -95,7 +67,36 @@ try {
     }
     
     // Transfer points
-    $result = User::transferPoints($fromUserId, $toUsername, $amount);
+    $result = User::transferPoints($fromUserId, $toUsername, $amount, $message);
+    
+    // Debug: log the result
+    error_log("Transfer result: " . json_encode($result));
+    
+    // If transfer was successful and there's a message, trigger SSE notification
+    if ($result['success'] && !empty($message)) {
+        try {
+            // Store notification for SSE to pick up
+            $db->query(
+                "INSERT INTO commands (id, command_type, command_data, is_active, timestamp) 
+                 VALUES (?, ?, ?, ?, ?)",
+                [
+                    'transfer_msg_' . $result['transferId'],
+                    'transfer_message',
+                    json_encode([
+                        'fromUsername' => $result['fromUsername'],
+                        'toUserId' => $result['toUserId'],
+                        'message' => $message,
+                        'amount' => $amount
+                    ]),
+                    true,
+                    time()
+            ]
+            );
+        } catch (Exception $e) {
+            error_log("SSE notification error: " . $e->getMessage());
+            // Don't fail the transfer if SSE notification fails
+        }
+    }
     
     if ($result['success']) {
         // Get updated points balance
@@ -114,8 +115,13 @@ try {
     }
     
     echo json_encode($result);
+    
 } catch (PDOException $e) {
     http_response_code(500);
     echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
     exit;
-}
+} catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode(['success' => false, 'error' => 'Unexpected error: ' . $e->getMessage()]);
+    exit;
+} 

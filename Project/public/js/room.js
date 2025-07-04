@@ -46,8 +46,12 @@ function connectSSE() {
     reconnectAttempts = 0;
   };
 
-  evtSource.onerror = function(e) {
-    console.error("SSE connection error", e);
+
+  evtSource.onerror = function (e) {
+    // Only log error if it's not a normal connection close
+    if (evtSource.readyState !== EventSource.CLOSED) {
+      console.warn("SSE connection error", e);
+    }
     evtSource.close();
     evtSource = null;
 
@@ -61,7 +65,8 @@ function connectSSE() {
         connectSSE();
       }, delay);
     } else {
-      alert("Connection lost. Please refresh the page to reconnect.");
+      console.warn("Max reconnection attempts reached. Please refresh the page to reconnect.");
+      // Don't show alert, just log the warning
     }
   };
 
@@ -109,6 +114,13 @@ function connectSSE() {
     if (processedCommands.size > 50) {
       const iterator = processedCommands.values();
       processedCommands.delete(iterator.next().value);
+    }
+
+    // Handle transfer messages
+    if (data.type === 'transfer_message') {
+      console.log('Received transfer message:', data);
+      showTransferMessage(data.fromUsername, data.message, data.amount);
+      return;
     }
 
     // Update the command text with command type
@@ -291,9 +303,59 @@ function updateUserCategories() {
   });
 }
 
-/**
- * Creates or returns the flash overlay element
- */
+// Function to show transfer message notification
+function showTransferMessage(fromUsername, message, amount) {
+  console.log('showTransferMessage called with:', { fromUsername, message, amount });
+  
+  // Create or get the transfer message container
+  let transferContainer = document.getElementById('transferMessageContainer');
+  if (!transferContainer) {
+    console.log('Creating new transfer message container');
+    transferContainer = document.createElement('div');
+    transferContainer.id = 'transferMessageContainer';
+    transferContainer.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      z-index: 10000;
+      max-width: 300px;
+      font-family: 'Arial', sans-serif;
+      transform: translateX(400px);
+      transition: transform 0.3s ease-out;
+    `;
+    document.body.appendChild(transferContainer);
+  }
+
+  // Update the content
+  transferContainer.innerHTML = `
+    <div style="margin-bottom: 8px; font-weight: bold; font-size: 16px;">
+      💰 +${amount} points from ${fromUsername}
+    </div>
+    <div style="font-size: 14px; line-height: 1.4;">
+      "${message}"
+    </div>
+  `;
+
+  // Show the message
+  transferContainer.style.transform = 'translateX(0)';
+  console.log('Transfer message displayed');
+
+  // Hide after 5 seconds
+  setTimeout(() => {
+    transferContainer.style.transform = 'translateX(400px)';
+    setTimeout(() => {
+      if (transferContainer.parentNode) {
+        transferContainer.parentNode.removeChild(transferContainer);
+      }
+    }, 300);
+  }, 5000);
+}
+
 function createFlashOverlay() {
   let overlay = document.getElementById('flashCueOverlay');
   if (!overlay) {
@@ -500,18 +562,29 @@ async function startMicRecording(durationSec, commandId, commandType) {
     
     mediaRecorder.onstop = async () => {
       showMicIndicator(false);
-      
-      if (audioChunks.length > 0) {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-        // Analyze audio
-        const analysis = await analyzeAudioBlob(audioBlob, audioContext.sampleRate, commandType);
-        // Update UI immediately
-        updateAudienceMetrics(analysis);
-        // Send results to server
-        sendMicResults({
-          commandId,
-          ...analysis
-        });
+      const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+      // Analyze audio
+      const analysis = await analyzeAudioBlob(audioBlob, audioContext.sampleRate, commandType);
+      // Update participant's own fields
+      if (document.getElementById('reactionAccuracy')) {
+        document.getElementById('reactionAccuracy').textContent = analysis.reactionAccuracy + '%';
+      }
+      if (document.getElementById('audienceIntensity')) {
+        document.getElementById('audienceIntensity').textContent = analysis.intensity;
+      }
+      if (document.getElementById('audienceVolume')) {
+        document.getElementById('audienceVolume').textContent = analysis.volume;
+      }
+      // Send results to server
+      sendMicResults(analysis);
+      // Clean up
+      if (micStream) {
+        micStream.getTracks().forEach(track => track.stop());
+        micStream = null;
+      }
+      if (audioContext) {
+        audioContext.close();
+        audioContext = null;
       }
       
       // Clean up
@@ -565,35 +638,27 @@ function cleanupMicRecording() {
  */
 async function analyzeAudioBlob(blob, sampleRate, commandType) {
   // Basic analysis: get average volume (RMS), peak, and duration
-  try {
-    const arrayBuffer = await blob.arrayBuffer();
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
-    const data = audioBuffer.getChannelData(0);
-    
-    let sum = 0, peak = 0, startIdx = -1, endIdx = -1;
-    const threshold = 0.02; // Audio detection threshold
-    
-    for (let i = 0; i < data.length; i++) {
-      const abs = Math.abs(data[i]);
-      sum += abs * abs;
-      if (abs > peak) peak = abs;
-      if (startIdx === -1 && abs > threshold) startIdx = i;
-      if (abs > threshold) endIdx = i;
-    }
-    
-    const rms = Math.sqrt(sum / data.length);
-    const duration = audioBuffer.duration;
-    let reactionAccuracy = 0;
-    
-    if (commandType === 'silence') {
-      // Special logic: high accuracy if very little sound
-      if (rms < 0.01) {
-        reactionAccuracy = 100;
-      } else {
-        // Scale down accuracy based on how loud the sound was
-        reactionAccuracy = Math.max(0, 100 - Math.round(rms * 1000)); // e.g., rms 0.05 -> 50% accuracy
-      }
+  const arrayBuffer = await blob.arrayBuffer();
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+  const data = audioBuffer.getChannelData(0);
+  let sum = 0, peak = 0, startIdx = -1, endIdx = -1;
+  for (let i = 0; i < data.length; i++) {
+    const abs = Math.abs(data[i]);
+    sum += abs * abs;
+    if (abs > 0.05 && abs > peak) peak = abs;
+    if (startIdx === -1 && abs > 0.02) startIdx = i;
+    if (abs > 0.02) endIdx = i;
+  }
+  const rms = Math.sqrt(sum / data.length);
+  const duration = audioBuffer.duration;
+  // Debug: log calculated values
+  // console.log('RMS:', rms, 'Peak:', peak, 'Duration:', duration);
+  let reactionAccuracy = 0;
+  if (commandType === 'silence') {
+    // Special logic: high accuracy if very little sound
+    if (rms < 0.005) {
+      reactionAccuracy = 100;
     } else {
       // Reaction accuracy: how soon after recording started did the sound start?
       if (startIdx !== -1) {
@@ -647,6 +712,12 @@ function updateAudienceMetrics({ intensity, volume }) {
       setTimeout(() => container.classList.remove('metric-updated'), 800);
     }
   }
+  await ctx.close();
+  return {
+    intensity: Math.round(rms * 800),
+    volume: Math.round(peak * 100),
+    reactionAccuracy
+  };
 }
 
 /**
@@ -659,11 +730,10 @@ function sendMicResults({ commandId, intensity, volume, reactionAccuracy }) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      userId,
-      commandId,
-      intensity,
-      volume,
-      reactionAccuracy,
+
+      userId: userId,
+      commandId: currentCommandId,
+      ...results,
     }),
   })
     .then((response) => response.json())
@@ -675,79 +745,69 @@ function sendMicResults({ commandId, intensity, volume, reactionAccuracy }) {
     });
 }
 
-/**
- * Sets up transfer points form submission
- */
-function setupTransferPointsForm() {
-  const transferForm = document.getElementById('transferPointsForm');
-  if (!transferForm) return;
-  
-  transferForm.addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const recipient = transferForm.querySelector('[name="recipient"]').value.trim();
-    const amount = parseInt(transferForm.querySelector('[name="amount"]').value, 10);
-    const message = transferForm.querySelector('[name="message"]').value.trim();
-    const feedback = transferForm.querySelector('.form-feedback');
-    
-    // Reset feedback
-    feedback.textContent = '';
-    
-    // Validate input
-    if (!recipient || !amount || amount <= 0) {
-      feedback.textContent = 'Please enter a valid recipient and amount.';
-      feedback.className = 'form-feedback error';
-      return;
-    }
-    
-    // Disable submit button during request
-    const submitButton = transferForm.querySelector('button[type="submit"]');
-    submitButton.disabled = true;
-    
-    // Show processing message
-    feedback.textContent = 'Processing transfer...';
-    feedback.className = 'form-feedback info';
-    
-    fetch(`${basePath}/api/transfer_points.php`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        fromUserId: userId,
-        toUsername: recipient,
-        amount: amount,
-        message: message
-      })
-    })
-    .then(response => response.json())
-    .then(data => {
-      submitButton.disabled = false;
-      
-      if (data.success) {
-        // Update points in UI
-        const pointsDisplay = document.querySelector('.user-info-list .info-value');
-        if (pointsDisplay && data.points) {
-          pointsDisplay.textContent = data.points;
-        }
-        
-        // Update max amount in the form
-        const amountInput = document.getElementById('amount');
-        if (amountInput && data.points) {
-          amountInput.max = data.points;
-        }
-        
-        feedback.textContent = data.message || 'Points transferred successfully!';
-        feedback.className = 'form-feedback success';
-        transferForm.reset();
-      } else {
-        feedback.textContent = data.error || 'Transfer failed.';
-        feedback.className = 'form-feedback error';
+document.addEventListener('DOMContentLoaded', function () {
+  // Transfer Points AJAX handler
+  const transferForm = document.querySelector('form[action*="transfer_points.php"]');
+  if (transferForm) {
+    transferForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const recipient = transferForm.querySelector('[name="recipient"]').value.trim();
+      const amount = parseInt(transferForm.querySelector('[name="amount"]').value, 10);
+      const message = transferForm.querySelector('[name="message"]').value.trim();
+      const feedback = transferForm.querySelector('.form-feedback');
+      feedback.textContent = '';
+      if (!recipient || !amount || amount <= 0) {
+        feedback.textContent = 'Please enter a valid recipient and amount.';
+        feedback.style.color = '#c92a2a';
+        return;
       }
-    })
-    .catch(error => {
-      console.error('Error transferring points:', error);
-      submitButton.disabled = false;
-      feedback.textContent = 'Network error. Please try again.';
-      feedback.className = 'form-feedback error';
+      transferForm.querySelector('button[type="submit"]').disabled = true;
+      fetch(basePath + '/api/transfer_points.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fromUserId: window.userId,
+          toUsername: recipient,
+          amount: amount,
+          message: message
+        })
+      })
+        .then(r => {
+          console.log('Response status:', r.status);
+          console.log('Response headers:', r.headers);
+          return r.text().then(text => {
+            console.log('Response text:', text);
+            if (text.trim() === '') {
+              throw new Error('Empty response from server');
+            }
+            try {
+              return JSON.parse(text);
+            } catch (e) {
+              throw new Error('Invalid JSON response: ' + text);
+            }
+          });
+        })
+        .then(resp => {
+          transferForm.querySelector('button[type="submit"]').disabled = false;
+          if (resp.success) {
+            // Update points in UI
+            const pointsLi = Array.from(document.querySelectorAll('.user-info-list li')).find(li => li.textContent.includes('Points:'));
+            if (pointsLi) {
+              pointsLi.innerHTML = `<strong>Points:</strong> ${resp.points}`;
+            }
+            feedback.textContent = 'Points transferred successfully!';
+            feedback.style.color = '#2b8a3e';
+            transferForm.reset();
+          } else {
+            feedback.textContent = resp.error || 'Transfer failed.';
+            feedback.style.color = '#c92a2a';
+          }
+        })
+        .catch(e => {
+          transferForm.querySelector('button[type="submit"]').disabled = false;
+          feedback.textContent = 'Transfer failed: ' + e;
+          feedback.style.color = '#c92a2a';
+        });
     });
   });
 }

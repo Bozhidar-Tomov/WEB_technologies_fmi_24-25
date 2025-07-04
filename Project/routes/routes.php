@@ -1,6 +1,6 @@
 <?php
 
-$router->get('/', 'HomeController@index');
+$router->get('/','HomeController@index');
 
 $router->get('/login', 'LoginController@showForm');
 $router->post('/login', 'LoginController@handleLogin');
