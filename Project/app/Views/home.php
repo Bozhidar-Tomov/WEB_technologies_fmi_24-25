@@ -8,9 +8,13 @@
     <?php if (isset($_SESSION['error'])): ?>
         <div class="status status-error" role="alert">
             <ul>
-                <?php foreach ($_SESSION['error'] as $error): ?>
-                    <li><?= htmlspecialchars($error) ?></li>
-                <?php endforeach; ?>
+                <?php if (is_array($_SESSION['error'])): ?>
+                    <?php foreach ($_SESSION['error'] as $error): ?>
+                        <li><?= htmlspecialchars($error) ?></li>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <li><?= htmlspecialchars($_SESSION['error']) ?></li>
+                <?php endif; ?>
             </ul>
             <?php unset($_SESSION['error']); ?>
         </div>

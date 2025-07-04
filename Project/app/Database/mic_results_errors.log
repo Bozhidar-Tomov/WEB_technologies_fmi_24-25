@@ -1,3 +1,0 @@
-2025-07-04T00:41:24+02:00 | Missing required fields: intensity,volume,reactionAccuracy | {"userId":"6866bce6d0176","commandId":"cmd_686707094ef04","results":{"commandId":"cmd_686707094ef04","intensity":3,"volume":100,"reactionAccuracy":99}}
-2025-07-04T00:42:07+02:00 | Missing required fields: intensity,volume,reactionAccuracy | {"userId":"6866bce6d0176","commandId":"cmd_6867073721391","results":{"commandId":"cmd_6867073721391","intensity":3,"volume":100,"reactionAccuracy":99}}
-2025-07-04T00:43:19+02:00 | Missing required fields: intensity,volume,reactionAccuracy | {"userId":"6866bce6d0176","commandId":"cmd_6867077dad8c8","results":{"commandId":"cmd_6867077dad8c8","intensity":2,"volume":100,"reactionAccuracy":99}}

@@ -52,6 +52,7 @@ The application uses MySQL for data storage. Follow these steps to set up the da
 1. Make sure you have XAMPP installed with MySQL service running
 2. Update database configuration in `config/database.php` if needed (default: localhost, root, no password)
 3. Run the database initialization script:
+
    ```
    php config/init_db.php
    ```
@@ -152,6 +153,7 @@ For older browsers (e.g., IE), the app falls back to JSON polling.
 ## Recent Optimizations
 
 The codebase has been cleaned up to remove:
+
 - Unused placeholder files
 - Redundant code in the SSE server
 - Unnecessary user agent tracking
@@ -163,31 +165,37 @@ The codebase has been cleaned up to remove:
 This project can be run on any machine with XAMPP installed without any configuration changes. Follow these steps:
 
 ### Prerequisites
+
 - XAMPP installed (make sure PHP is in your system PATH)
 - MySQL database (included with XAMPP)
 
 ### Running the Application
 
 #### Windows
+
 1. Clone or download this project to any directory on your machine
 2. Double-click the `run.bat` file
-3. Open your browser and navigate to http://localhost:8080
+3. Open your browser and navigate to <http://localhost:8080>
 
 #### Mac/Linux
+
 1. Clone or download this project to any directory on your machine
 2. Make the run script executable: `chmod +x run.sh`
 3. Execute the script: `./run.sh`
-4. Open your browser and navigate to http://localhost:8080
+4. Open your browser and navigate to <http://localhost:8080>
 
 ### Database Setup
+
 1. Start MySQL from your XAMPP control panel
-2. Run the database setup script (from your browser): http://localhost:8080/config/init_db.php
+2. Run the database setup script (from your browser): <http://localhost:8080/config/init_db.php>
    - This will create the necessary database and tables
 
 ### Stopping the Server
+
 - Press `Ctrl+C` in the terminal/command prompt window to stop the PHP server
 
 ### Notes
+
 - The project will use port 8080 by default. If this port is already in use, modify the port number in the run script.
 - No Apache virtual hosts configuration is needed
 - You can run this project from any directory
@@ -197,6 +205,7 @@ This project can be run on any machine with XAMPP installed without any configur
 ### Running the Project in XAMPP htdocs
 
 1. Clone or download this project into your XAMPP's `htdocs` directory:
+
    ```
    C:\xampp\htdocs\crowd-pulse\
    ```
@@ -204,6 +213,7 @@ This project can be run on any machine with XAMPP installed without any configur
 2. Start Apache and MySQL services in XAMPP Control Panel.
 
 3. Access the application through your browser:
+
    ```
    http://localhost/crowd-pulse/public/
    ```
@@ -215,11 +225,13 @@ This project can be run on any machine with XAMPP installed without any configur
 1. Make sure your database configuration in `config/database.php` is correct.
 
 2. If needed, run the database initialization script:
+
    ```
    http://localhost/crowd-pulse/config/init_db.php
    ```
 
 3. You can test your database connection using:
+
    ```
    http://localhost/crowd-pulse/config/test_db_connection.php
    ```
@@ -248,3 +260,42 @@ Key features:
 ## Original Authors
 
 Bozhidar Tomov, Mira Velikova
+
+## Database Schema Updates
+
+### Recent Schema Changes (2023)
+
+The database schema has been simplified and optimized:
+
+1. **Unified Categories Field**:
+   - Previously separate `user_groups` and `user_tags` tables have been combined into a single `categories` field in the `users` table.
+   - Categories are now stored as a comma-separated string, simplifying queries and reducing joins.
+
+2. **Schema Consolidation**:
+   - All schema definitions are now in a single source (`schema.sql`).
+   - The database initialization process has been streamlined.
+
+3. **Migration Tool**:
+   - A migration script (`config/migrate_categories.php`) is available to move data from the old `user_categories` table to the new `categories` field in the `users` table.
+   - Run this script if you're upgrading from a previous version.
+
+4. **Automatic Database Creation**:
+   - The application now automatically creates the database if it doesn't exist when first accessed.
+   - No manual database setup is required for new installations.
+
+### Running the Migration
+
+If you're upgrading from a previous version:
+
+1. Make sure your database configuration in `config/database.php` is correct.
+2. Run the migration script:
+
+   ```
+   http://localhost/Project/config/migrate_categories.php
+   ```
+
+   or via command line:
+
+   ```
+   php config/migrate_categories.php
+   ```

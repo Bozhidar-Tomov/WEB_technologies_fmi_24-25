@@ -4,6 +4,7 @@ error_reporting(0);
 ini_set('display_errors', 0);
 
 header('Content-Type: application/json');
+session_start();
 
 require_once __DIR__ . '/../../app/Models/User.php';
 require_once __DIR__ . '/../../app/Database/Database.php';
@@ -29,6 +30,7 @@ try {
         echo json_encode(['success' => false, 'error' => 'Missing or invalid fields']);
         exit;
     }
+
 
     $db = Database::getInstance();
 
@@ -94,6 +96,22 @@ try {
             error_log("SSE notification error: " . $e->getMessage());
             // Don't fail the transfer if SSE notification fails
         }
+    }
+    
+    if ($result['success']) {
+        // Get updated points balance
+        $stmt = $db->query(
+            "SELECT points FROM users WHERE id = ?",
+            [$fromUserId]
+        );
+        $updatedSender = $stmt->fetch(PDO::FETCH_ASSOC);
+        $newBalance = $updatedSender['points'];
+        
+        // Update session data
+        $_SESSION['user']['points'] = $newBalance;
+        
+        $result['newBalance'] = $newBalance;
+        $result['message'] = "Successfully transferred $amount points to $toUsername";
     }
     
     echo json_encode($result);

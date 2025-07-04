@@ -2,13 +2,14 @@
 $username = $username ?? 'Guest';
 $points = $points ?? 0;
 $role = $role ?? 'Participant';
-$group = isset($groups) && is_array($groups) && count($groups) > 0 ? implode(', ', $groups) : 'General';
+$categoriesStr = $categoriesStr ?? 'None';
 $reactionAccuracy = $reactionAccuracy ?? 0;
 $currentCommand = 'Awaiting next command...';
 $countdown = '';
 $audienceIntensity = '';
 $audienceVolume = '';
 $responders = '';
+$basePath = defined('BASE_PATH') ? BASE_PATH : '';
 ?>
 
 <main class="room-main" aria-label="Room View">
@@ -29,27 +30,53 @@ $responders = '';
     <section class="panels">
         <section class="panel user-panel" aria-label="Your Info">
             <h2 class="panel-title">Your Info</h2>
+            <div class="user-profile">
+                <div class="user-avatar"><?= strtoupper(substr($username, 0, 1)) ?></div>
+                <div class="user-details">
+                    <div class="user-name"><?= $username ?></div>
+                    <div class="user-role"><?= $role ?></div>
+                </div>
+            </div>
             <ul class="user-info-list">
-                <li><strong>Name:</strong> <?= $username ?></li>
-                <li><strong>Points:</strong> <?= $points ?></li>
-                <li><strong>Role:</strong> <?= $role ?></li>
-                <li><strong>Group:</strong> <?= $group ?></li>
-                <li><strong>Reaction Accuracy:</strong> <span id="reactionAccuracy"><?= $reactionAccuracy ?>%</span></li>
+                <li><span class="info-label">Points:</span> <span class="info-value"><?= $points ?></span></li>
+                <li><span class="info-label">Categories:</span> <span class="info-value" id="userCategories"><?= $categoriesStr ?></span></li>
+                <li><span class="info-label">Reaction Accuracy:</span> <span class="info-value" id="reactionAccuracy"><?= $reactionAccuracy ?>%</span></li>
             </ul>
+            <button id="editCategoriesBtn" class="btn btn-secondary">Edit Categories</button>
         </section>
-        <section class="panel meter" aria-label="Audience Reaction">
+        
+        <section class="panel audience-panel" aria-label="Audience Reaction">
             <h2 class="panel-title">Audience Reaction</h2>
-            <ul class="audience-info-list">
+            <div class="audience-metrics">
                 <?php if (!file_exists(__DIR__ . '/../Database/sim_audience_on.flag')): ?>
-                <li>🔥 Intensity: <span id="audienceIntensity"><?= $audienceIntensity ?></span></li>
+                <div class="audience-metric">
+                    <div class="metric-icon">🔥</div>
+                    <div class="metric-details">
+                        <div class="metric-label">Intensity</div>
+                        <div class="metric-value" id="audienceIntensity"><?= $audienceIntensity ?></div>
+                    </div>
+                </div>
                 <?php endif; ?>
-                <li>🔊 Volume: <span id="audienceVolume"><?= $audienceVolume ?></span></li>
-                <li>👥 Responders: <span id="audienceResponders"><?= $responders ?></span></li>
-            </ul>
+                <div class="audience-metric">
+                    <div class="metric-icon">🔊</div>
+                    <div class="metric-details">
+                        <div class="metric-label">Volume</div>
+                        <div class="metric-value" id="audienceVolume"><?= $audienceVolume ?></div>
+                    </div>
+                </div>
+                <div class="audience-metric">
+                    <div class="metric-icon">👥</div>
+                    <div class="metric-details">
+                        <div class="metric-label">Responders</div>
+                        <div class="metric-value" id="audienceResponders"><?= $responders ?></div>
+                    </div>
+                </div>
+            </div>
         </section>
+        
         <section class="panel" aria-label="Transfer Points">
             <h2 class="panel-title">💸 Transfer Points</h2>
-            <form class="form-fields" action="<?= $basePath ?>/api/transfer_points.php" method="POST" autocomplete="off">
+            <form class="form-fields" id="transferPointsForm" action="<?= $basePath ?>/api/transfer_points.php" method="POST" autocomplete="off">
                 <label for="recipient">Recipient Username:</label>
                 <input type="text" id="recipient" name="recipient" required>
                 <label for="amount">Points:</label>
@@ -63,6 +90,21 @@ $responders = '';
     </section>
 </main>
 
+<!-- Categories Edit Modal -->
+<div id="categoriesModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h3>Update Your Categories</h3>
+        <p class="modal-description">Enter your categories separated by commas (e.g., Music, Sports, Technology)</p>
+        <form id="updateCategoriesForm" class="form-fields">
+            <label for="categoriesInput">Categories:</label>
+            <input type="text" id="categoriesInput" name="categories" value="<?= htmlspecialchars($categoriesStr) ?>" required>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <div class="form-feedback" aria-live="polite"></div>
+        </form>
+    </div>
+</div>
+
 <div id="micRecordingIndicator" style="display:none; position: fixed; top: 12px; right: 18px; z-index: 10010; background: rgba(255,255,255,0.95); border-radius: 8px; padding: 6px 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); font-weight: bold; color: #c92a2a; align-items: center; gap: 0.5em;">
     <span style="display:inline-block; width: 12px; height: 12px; background: #c92a2a; border-radius: 50%; margin-right: 8px; box-shadow: 0 0 6px 2px #faa2a2;"></span>
     Recording...
@@ -70,6 +112,6 @@ $responders = '';
 
 <script>
     window.userId = "<?= $_SESSION['user']['id'] ?? '' ?>";
-    window.basePath = "<?= defined('BASE_PATH') ? BASE_PATH : '' ?>";
+    window.basePath = "<?= $basePath ?>";
 </script>
-<script src="<?= defined('BASE_PATH') ? BASE_PATH : '' ?>/js/room.js"></script>
+<script src="<?= $basePath ?>/js/room.js"></script>
