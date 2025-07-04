@@ -77,6 +77,7 @@ $basePath = defined('BASE_PATH') ? BASE_PATH : '';
         
         <section class="panel" aria-label="Transfer Points">
             <h2 class="panel-title">💸 Transfer Points</h2>
+
             <form class="form-fields" id="transferPointsForm" action="<?= $basePath ?>/api/transfer_points.php" method="POST" autocomplete="off" target="_self" onsubmit="if(window.event){window.event.preventDefault();return false;}">
                 <input type="hidden" name="fromUserId" value="<?= htmlspecialchars($id) ?>">
                 <label for="recipient">Recipient Username:</label>

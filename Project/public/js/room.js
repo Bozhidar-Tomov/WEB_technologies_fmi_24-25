@@ -1,8 +1,3 @@
-// Debug: Confirm JS loaded and print userId/basePath
-console.log('[DEBUG][room.js] JS loaded');
-console.log('[DEBUG][room.js] window.userId:', window.userId);
-console.log('[DEBUG][room.js] window.basePath:', window.basePath);
-
 // Get user ID and base path from global variables
 const userId = window.userId || "";
 const basePath = window.basePath ? window.basePath.replace(/\/+$/, '') : "";
@@ -273,7 +268,7 @@ function updateUserCategories() {
   
   feedbackElement.textContent = 'Updating...';
   feedbackElement.className = 'form-feedback info';
-  
+ 
   fetch(`${basePath}/api/update_categories.php`, {
     method: 'POST',
     body: formData
@@ -688,8 +683,45 @@ async function analyzeAudioBlob(blob, sampleRate, commandType) {
       };
     }
   }
+
+  const rms = Math.sqrt(sum / data.length);
+  const duration = audioBuffer.duration;
+  // Debug: log calculated values
+  // console.log('RMS:', rms, 'Peak:', peak, 'Duration:', duration);
+  let reactionAccuracy = 0;
+  if (commandType === 'silence') {
+    // Special logic: high accuracy if very little sound
+    if (rms < 0.005) {
+      reactionAccuracy = 100;
+    } else {
+      // Reaction accuracy: how soon after recording started did the sound start?
+      if (startIdx !== -1) {
+        const startSec = startIdx / sampleRate;
+        reactionAccuracy = Math.max(0, 1 - startSec / duration); // 1 = instant, 0 = very late
+        reactionAccuracy = Math.round(reactionAccuracy * 100);
+      }
+    }
+    
+    await ctx.close();
+    
+    return {
+      intensity: Math.round(rms * 100),
+      volume: Math.round(peak * 100),
+      reactionAccuracy
+    };
+  } catch (err) {
+    console.error('Error analyzing audio:', err);
+    return {
+      intensity: 0,
+      volume: 0,
+      reactionAccuracy: 0
+    };
+  }
 }
 
+/**
+ * Sends microphone results to the server
+ */
 /**
  * Updates audience metrics (intensity & volume) in the Room view.
  */
@@ -704,6 +736,7 @@ function updateAudienceMetrics({ intensity, volume }) {
       container.classList.add('metric-updated');
       setTimeout(() => container.classList.remove('metric-updated'), 800);
     }
+
   }
 
   if (volumeEl && typeof volume !== 'undefined') {
@@ -726,6 +759,7 @@ function sendMicResults({ commandId, intensity, volume, reactionAccuracy }) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
+
       userId: userId,
       commandId: currentCommandId,
       intensity: intensity,
