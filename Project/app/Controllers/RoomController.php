@@ -16,6 +16,18 @@ class RoomController extends BaseController
         require_once __DIR__ . '/../Models/User.php';
         $users = \App\Models\User::loadUsers();
         $points = isset($users[$user['id']]) ? $users[$user['id']]['points'] : ($user['points'] ?? 0);
+        
+        // Get categories from user data
+        $categories = [];
+        if (isset($user['categories']) && is_array($user['categories'])) {
+            $categories = $user['categories'];
+        } elseif (isset($users[$user['id']]['categories'])) {
+            $categories = $users[$user['id']]['categories'];
+        }
+        
+        // Format categories for display
+        $categoriesStr = !empty($categories) ? implode(', ', $categories) : 'None';
+        
         $roomData = [
             'title' => 'Room View',
             'id' => $user['id'],
@@ -24,6 +36,8 @@ class RoomController extends BaseController
             'points' => $points,
             'groups' => $user['groups'] ?? [],
             'tags' => $user['tags'] ?? [],
+            'categories' => $categories,
+            'categoriesStr' => $categoriesStr,
             'gender' => $user['gender'] ?? '',
         ];
         $this->render('room', $roomData);

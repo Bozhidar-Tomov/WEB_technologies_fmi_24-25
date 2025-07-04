@@ -26,15 +26,49 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $data = json_decode(file_get_contents('php://input'), true);
 $required = ['userId', 'commandId', 'intensity', 'volume', 'reactionAccuracy'];
 $missing = [];
+$invalid = [];
+
 foreach ($required as $field) {
     if (!array_key_exists($field, $data)) {
         $missing[] = $field;
+        continue;
+    }
+
+    // Perform basic validation without treating 0 as missing
+    switch ($field) {
+        case 'intensity':
+        case 'volume':
+        case 'reactionAccuracy':
+            if (!is_numeric($data[$field])) {
+                $invalid[] = $field;
+            }
+            break;
+        default:
+            if ($data[$field] === '' || $data[$field] === null) {
+                $invalid[] = $field;
+            }
     }
 }
+
 if (!$data || count($missing) > 0) {
     http_response_code(400);
     log_mic_error('Missing required fields: ' . implode(',', $missing), $data);
-    echo json_encode(['success' => false, 'error' => 'Missing required fields', 'missing' => $missing]);
+    echo json_encode([
+        'success' => false,
+        'error'   => 'Missing required fields',
+        'missing' => $missing,
+    ]);
+    exit;
+}
+
+if (count($invalid) > 0) {
+    http_response_code(400);
+    log_mic_error('Invalid field values: ' . implode(',', $invalid), $data);
+    echo json_encode([
+        'success' => false,
+        'error'   => 'Invalid field values',
+        'invalid' => $invalid,
+    ]);
     exit;
 }
 

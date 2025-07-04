@@ -7,20 +7,12 @@ USE audience_reaction_app;
 CREATE TABLE IF NOT EXISTS users (
     id VARCHAR(32) PRIMARY KEY,
     username VARCHAR(50) UNIQUE,
-    role ENUM('participant', 'viewer', 'leader', 'admin') DEFAULT 'participant',
+    role ENUM('active participant', 'passive viewer', 'admin') DEFAULT 'active participant',
     points INT DEFAULT 0,
     gender VARCHAR(20),
     password VARCHAR(255),
+    categories VARCHAR(255) DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- User categories table (replaces both user_groups and user_tags tables)
-CREATE TABLE IF NOT EXISTS user_categories (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id VARCHAR(32),
-    category VARCHAR(50),
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    UNIQUE KEY user_category_unique (user_id, category)
 );
 
 -- Active users table

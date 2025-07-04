@@ -181,12 +181,7 @@ class CommandService
         try {
             // Get user data
             $stmt = $this->db->query(
-                "SELECT u.*, 
-                        GROUP_CONCAT(DISTINCT uc.category) as categories_concat
-                 FROM users u
-                 LEFT JOIN user_categories uc ON u.id = uc.user_id
-                 WHERE u.id = ?
-                 GROUP BY u.id",
+                "SELECT * FROM users WHERE id = ?",
                 [$userId]
             );
             
@@ -198,8 +193,8 @@ class CommandService
             
             // Process user categories
             $userCategories = [];
-            if (!empty($userData['categories_concat'])) {
-                $userCategories = explode(',', $userData['categories_concat']);
+            if (!empty($userData['categories'])) {
+                $userCategories = array_map('trim', explode(',', $userData['categories']));
             }
             
             // Check gender filter
@@ -207,23 +202,18 @@ class CommandService
                 return false;
             }
             
-            // Check categories filter
+            // Check categories filter (AND logic: user must have ALL target categories)
             if (!empty($commandData['targetCategories'])) {
                 $targetCategories = is_array($commandData['targetCategories']) 
                     ? $commandData['targetCategories'] 
                     : explode(',', $commandData['targetCategories']);
+                $targetCategories = array_map('trim', $targetCategories);
                 
-                $hasMatchingCategory = false;
+                // Check that every target category is in user's categories
                 foreach ($targetCategories as $category) {
-                    $category = trim($category);
-                    if (in_array($category, $userCategories)) {
-                        $hasMatchingCategory = true;
-                        break;
+                    if (!in_array($category, $userCategories)) {
+                        return false;
                     }
-                }
-                
-                if (!$hasMatchingCategory) {
-                    return false;
                 }
             }
             
