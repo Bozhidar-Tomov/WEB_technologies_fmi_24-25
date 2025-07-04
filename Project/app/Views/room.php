@@ -1,4 +1,5 @@
 <?php
+$id = $id ?? '';
 $username = $username ?? 'Guest';
 $points = $points ?? 0;
 $role = $role ?? 'Participant';
@@ -76,7 +77,9 @@ $basePath = defined('BASE_PATH') ? BASE_PATH : '';
         
         <section class="panel" aria-label="Transfer Points">
             <h2 class="panel-title">💸 Transfer Points</h2>
-            <form class="form-fields" id="transferPointsForm" action="<?= $basePath ?>/api/transfer_points.php" method="POST" autocomplete="off">
+
+            <form class="form-fields" id="transferPointsForm" action="<?= $basePath ?>/api/transfer_points.php" method="POST" autocomplete="off" target="_self" onsubmit="if(window.event){window.event.preventDefault();return false;}">
+                <input type="hidden" name="fromUserId" value="<?= htmlspecialchars($id) ?>">
                 <label for="recipient">Recipient Username:</label>
                 <input type="text" id="recipient" name="recipient" required>
                 <label for="amount">Points:</label>
@@ -86,6 +89,7 @@ $basePath = defined('BASE_PATH') ? BASE_PATH : '';
                 <button class="btn btn-primary" type="submit">Send Points</button>
                 <div class="form-feedback" aria-live="polite"></div>
             </form>
+            <noscript><div style="color: #c92a2a; margin-top: 8px;">Note: Without JavaScript, the page will reload after transfer.</div></noscript>
         </section>
     </section>
 </main>
@@ -111,7 +115,23 @@ $basePath = defined('BASE_PATH') ? BASE_PATH : '';
 </div>
 
 <script>
-    window.userId = "<?= $_SESSION['user']['id'] ?? '' ?>";
+    window.userId = "<?= isset($id) ? htmlspecialchars($id) : '' ?>";
     window.basePath = "<?= $basePath ?>";
+    // Debug: Log transfer points data to console
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('[DEBUG] window.userId:', window.userId);
+        console.log('[DEBUG] window.basePath:', window.basePath);
+        var transferForm = document.getElementById('transferPointsForm');
+        if (transferForm) {
+            var recipient = transferForm.querySelector('[name="recipient"]');
+            var amount = transferForm.querySelector('[name="amount"]');
+            var message = transferForm.querySelector('[name="message"]');
+            console.log('[DEBUG] Transfer form fields:', {
+                recipient: recipient ? recipient.value : undefined,
+                amount: amount ? amount.value : undefined,
+                message: message ? message.value : undefined
+            });
+        }
+    });
 </script>
 <script src="<?= $basePath ?>/js/room.js"></script>

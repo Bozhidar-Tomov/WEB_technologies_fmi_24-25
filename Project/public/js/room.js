@@ -268,7 +268,7 @@ function updateUserCategories() {
   
   feedbackElement.textContent = 'Updating...';
   feedbackElement.className = 'form-feedback info';
-  
+ 
   fetch(`${basePath}/api/update_categories.php`, {
     method: 'POST',
     body: formData
@@ -583,7 +583,7 @@ async function startMicRecording(durationSec, commandId, commandType) {
         micStream = null;
       }
       if (audioContext) {
-        audioContext.close();
+        audioContext.close().catch(console.error);
         audioContext = null;
       }
       
@@ -637,19 +637,53 @@ function cleanupMicRecording() {
  * Analyzes audio blob for intensity, volume, and reaction accuracy
  */
 async function analyzeAudioBlob(blob, sampleRate, commandType) {
-  // Basic analysis: get average volume (RMS), peak, and duration
-  const arrayBuffer = await blob.arrayBuffer();
-  const ctx = new (window.AudioContext || window.webkitAudioContext)();
-  const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
-  const data = audioBuffer.getChannelData(0);
-  let sum = 0, peak = 0, startIdx = -1, endIdx = -1;
-  for (let i = 0; i < data.length; i++) {
-    const abs = Math.abs(data[i]);
-    sum += abs * abs;
-    if (abs > 0.05 && abs > peak) peak = abs;
-    if (startIdx === -1 && abs > 0.02) startIdx = i;
-    if (abs > 0.02) endIdx = i;
+  try {
+    // Basic analysis: get average volume (RMS), peak, and duration
+    const arrayBuffer = await blob.arrayBuffer();
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+    const data = audioBuffer.getChannelData(0);
+    let sum = 0, peak = 0, startIdx = -1, endIdx = -1;
+    for (let i = 0; i < data.length; i++) {
+      const abs = Math.abs(data[i]);
+      sum += abs * abs;
+      if (abs > 0.05 && abs > peak) peak = abs;
+      if (startIdx === -1 && abs > 0.02) startIdx = i;
+      if (abs > 0.02) endIdx = i;
+    }
+    const rms = Math.sqrt(sum / data.length);
+    const duration = audioBuffer.duration;
+    // Debug: log calculated values
+    // console.log('RMS:', rms, 'Peak:', peak, 'Duration:', duration);
+    let reactionAccuracy = 0;
+    if (commandType === 'silence') {
+      // Special logic: high accuracy if very little sound
+      if (rms < 0.005) {
+        reactionAccuracy = 100;
+      } else {
+        // Reaction accuracy: how soon after recording started did the sound start?
+        if (startIdx !== -1) {
+          const startSec = startIdx / sampleRate;
+          reactionAccuracy = Math.max(0, 1 - startSec / duration); // 1 = instant, 0 = very late
+          reactionAccuracy = Math.round(reactionAccuracy * 100);
+        }
+      }
+      
+      return {
+        intensity: Math.round(rms * 100),
+        volume: Math.round(peak * 100),
+        reactionAccuracy
+      };
+    } catch (err) {
+      console.error('Error analyzing audio:', err);
+      return {
+        intensity: 0,
+        volume: 0,
+        reactionAccuracy: 0
+      };
+    }
   }
+
   const rms = Math.sqrt(sum / data.length);
   const duration = audioBuffer.duration;
   // Debug: log calculated values
@@ -702,6 +736,7 @@ function updateAudienceMetrics({ intensity, volume }) {
       container.classList.add('metric-updated');
       setTimeout(() => container.classList.remove('metric-updated'), 800);
     }
+
   }
 
   if (volumeEl && typeof volume !== 'undefined') {
@@ -712,12 +747,6 @@ function updateAudienceMetrics({ intensity, volume }) {
       setTimeout(() => container.classList.remove('metric-updated'), 800);
     }
   }
-  await ctx.close();
-  return {
-    intensity: Math.round(rms * 800),
-    volume: Math.round(peak * 100),
-    reactionAccuracy
-  };
 }
 
 /**
@@ -733,7 +762,9 @@ function sendMicResults({ commandId, intensity, volume, reactionAccuracy }) {
 
       userId: userId,
       commandId: currentCommandId,
-      ...results,
+      intensity: intensity,
+      volume: volume,
+      reactionAccuracy: reactionAccuracy
     }),
   })
     .then((response) => response.json())

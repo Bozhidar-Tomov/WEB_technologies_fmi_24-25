@@ -20,10 +20,19 @@ try {
     }
 
     $data = json_decode(file_get_contents('php://input'), true);
-    $fromUserId = $data['fromUserId'] ?? '';
-    $toUsername = trim($data['toUsername'] ?? '');
-    $amount = (int)($data['amount'] ?? 0);
-    $message = trim($data['message'] ?? '');
+
+    // Fallback to form-encoded POST if JSON is empty
+    if (empty($data)) {
+        $fromUserId = $_POST['fromUserId'] ?? '';
+        $toUsername = trim($_POST['toUsername'] ?? $_POST['recipient'] ?? '');
+        $amount = (int)($_POST['amount'] ?? 0);
+        $message = trim($_POST['message'] ?? '');
+    } else {
+        $fromUserId = $data['fromUserId'] ?? '';
+        $toUsername = trim($data['toUsername'] ?? '');
+        $amount = (int)($data['amount'] ?? 0);
+        $message = trim($data['message'] ?? '');
+    }
 
     if (!$fromUserId || !$toUsername || $amount <= 0) {
         http_response_code(400);
@@ -72,8 +81,8 @@ try {
     // Debug: log the result
     error_log("Transfer result: " . json_encode($result));
     
-    // If transfer was successful and there's a message, trigger SSE notification
-    if ($result['success'] && !empty($message)) {
+    // If transfer was successful, trigger SSE notification (even if message is empty)
+    if ($result['success']) {
         try {
             // Store notification for SSE to pick up
             $db->query(
