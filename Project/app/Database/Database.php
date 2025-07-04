@@ -97,4 +97,9 @@ class Database
     {
         return $this->connection->rollBack();
     }
+    
+    public function lastInsertId(): int
+    {
+        return (int) $this->connection->lastInsertId();
+    }
 } 

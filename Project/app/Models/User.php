@@ -207,7 +207,7 @@ class User
         }
     }
 
-    public static function transferPoints($fromUserId, $toUsername, $amount) {
+    public static function transferPoints($fromUserId, $toUsername, $amount, $message = '') {
         $db = Database::getInstance();
         $amount = (int)$amount;
         
@@ -216,7 +216,7 @@ class User
             
             // Check if sender exists and has enough points
             $stmt = $db->query(
-                "SELECT id, points FROM users WHERE id = ?",
+                "SELECT id, points, username FROM users WHERE id = ?",
                 [$fromUserId]
             );
             $sender = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -254,12 +254,15 @@ class User
                 [$amount, $toUserId]
             );
             
-            // Log the transfer
+            // Log the transfer with message
             $db->query(
-                "INSERT INTO point_transfers (from_user_id, to_user_id, amount, timestamp) 
-                 VALUES (?, ?, ?, ?)",
-                [$fromUserId, $toUserId, $amount, time()]
+                "INSERT INTO point_transfers (from_user_id, to_user_id, amount, message, timestamp) 
+                 VALUES (?, ?, ?, ?, ?)",
+                [$fromUserId, $toUserId, $amount, $message, time()]
             );
+            
+            // Get the transfer ID
+            $transferId = $db->lastInsertId();
             
             // Get updated points for sender
             $stmt = $db->query(
@@ -272,7 +275,10 @@ class User
             
             return [
                 'success' => true, 
-                'points' => (int)$updatedSender['points']
+                'points' => (int)$updatedSender['points'],
+                'transferId' => $transferId,
+                'fromUsername' => $sender['username'],
+                'toUserId' => $toUserId
             ];
         } catch (PDOException $e) {
             $db->rollback();

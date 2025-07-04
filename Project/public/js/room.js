@@ -35,7 +35,10 @@ function connectSSE() {
   };
 
   evtSource.onerror = function (e) {
-    console.error("SSE connection error", e);
+    // Only log error if it's not a normal connection close
+    if (evtSource.readyState !== EventSource.CLOSED) {
+      console.warn("SSE connection error", e);
+    }
 
     evtSource.close();
     evtSource = null;
@@ -50,7 +53,8 @@ function connectSSE() {
         connectSSE();
       }, delay);
     } else {
-      alert("Connection lost. Please refresh the page to reconnect.");
+      console.warn("Max reconnection attempts reached. Please refresh the page to reconnect.");
+      // Don't show alert, just log the warning
     }
   };
 
@@ -85,6 +89,13 @@ function connectSSE() {
     if (processedCommands.size > 50) {
       const iterator = processedCommands.values();
       processedCommands.delete(iterator.next().value);
+    }
+
+    // Handle transfer messages
+    if (data.type === 'transfer_message') {
+      console.log('Received transfer message:', data);
+      showTransferMessage(data.fromUsername, data.message, data.amount);
+      return;
     }
 
     // Update the command text with command type
@@ -165,6 +176,59 @@ function resetCommandDisplay() {
   }
   
   console.log("Command display reset");
+}
+
+// Function to show transfer message notification
+function showTransferMessage(fromUsername, message, amount) {
+  console.log('showTransferMessage called with:', { fromUsername, message, amount });
+  
+  // Create or get the transfer message container
+  let transferContainer = document.getElementById('transferMessageContainer');
+  if (!transferContainer) {
+    console.log('Creating new transfer message container');
+    transferContainer = document.createElement('div');
+    transferContainer.id = 'transferMessageContainer';
+    transferContainer.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      z-index: 10000;
+      max-width: 300px;
+      font-family: 'Arial', sans-serif;
+      transform: translateX(400px);
+      transition: transform 0.3s ease-out;
+    `;
+    document.body.appendChild(transferContainer);
+  }
+
+  // Update the content
+  transferContainer.innerHTML = `
+    <div style="margin-bottom: 8px; font-weight: bold; font-size: 16px;">
+      💰 +${amount} points from ${fromUsername}
+    </div>
+    <div style="font-size: 14px; line-height: 1.4;">
+      "${message}"
+    </div>
+  `;
+
+  // Show the message
+  transferContainer.style.transform = 'translateX(0)';
+  console.log('Transfer message displayed');
+
+  // Hide after 5 seconds
+  setTimeout(() => {
+    transferContainer.style.transform = 'translateX(400px)';
+    setTimeout(() => {
+      if (transferContainer.parentNode) {
+        transferContainer.parentNode.removeChild(transferContainer);
+      }
+    }, 300);
+  }, 5000);
 }
 
 // --- Cue Controls ---
@@ -477,7 +541,7 @@ function sendMicResults(results) {
 
 document.addEventListener('DOMContentLoaded', function () {
   // Transfer Points AJAX handler
-  const transferForm = document.querySelector('form[action="transfer_points.php"]');
+  const transferForm = document.querySelector('form[action*="transfer_points.php"]');
   if (transferForm) {
     transferForm.addEventListener('submit', function (e) {
       e.preventDefault();
@@ -492,7 +556,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
       }
       transferForm.querySelector('button[type="submit"]').disabled = true;
-      fetch('../api/transfer_points.php', {
+      fetch(basePath + '/api/transfer_points.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -502,7 +566,21 @@ document.addEventListener('DOMContentLoaded', function () {
           message: message
         })
       })
-        .then(r => r.json())
+        .then(r => {
+          console.log('Response status:', r.status);
+          console.log('Response headers:', r.headers);
+          return r.text().then(text => {
+            console.log('Response text:', text);
+            if (text.trim() === '') {
+              throw new Error('Empty response from server');
+            }
+            try {
+              return JSON.parse(text);
+            } catch (e) {
+              throw new Error('Invalid JSON response: ' + text);
+            }
+          });
+        })
         .then(resp => {
           transferForm.querySelector('button[type="submit"]').disabled = false;
           if (resp.success) {
